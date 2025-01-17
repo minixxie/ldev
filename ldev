@@ -1,0 +1,114 @@
+#!/bin/bash
+
+ldevRoot="$HOME/.ldev"
+k8sProj="k8s-services"
+
+function help() {
+    echo "Usage: $0 arg1 arg2 arg3 ..."
+    echo "Arguments:"
+    echo '├─ help.....show this help message'
+    echo '│  ├─ k8s...show help message for argument 'k8s''
+    echo '│  └─ gpu...show help message for argument 'gpu''
+    echo '├─ init.....initialize files for ldev to use under '"$ldevRoot"
+    echo '├─ k8s......get/up/down for k8s with colima/k3s'
+    echo '│  ├─ get...get info of k8s'
+    echo '│  ├─ up....start k8s'
+    echo '│  ├─ down..stop k8s'
+    echo '│  └─ redo..recreate k8s'
+    echo '└─ gpu......get/up/down for nvidia gpu operator'
+}
+
+function init() {
+    if ! [ -d "$ldevRoot" ]; then
+        mkdir -p "$ldevRoot"
+        chmod 700 "$ldevRoot"
+    fi
+    if ! [ -d "$ldevRoot"/"$k8sProj" ]; then
+        cd "$ldevRoot" && git clone https://github.com/minixxie/k8s-services.git > /dev/null
+    fi
+    cd "$ldevRoot"/"$k8sProj" && git pull --rebase
+    echo "OK"
+}
+function check_init() {
+    if ! [ -d "$ldevRoot" ]; then
+        echo >&2 "ERR: please run this first: $0 init"
+	exit 1
+    fi
+    if ! [ -d "$ldevRoot"/"$k8sProj" ]; then
+        echo >&2 "ERR: please run this first: $0 init"
+	exit 1
+    fi
+}
+
+function k8s_get() {
+    echo "# kubectl get node -o wide"
+    kubectl get node -o wide
+    echo ""
+    echo "# kubectl get ns"
+    kubectl get ns
+}
+
+function k8s_up() {
+    true
+}
+
+function k8s_down() {
+    true
+}
+
+function k8s_redo() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj" && make -s k8s-redo
+}
+
+function gpu_get() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/nvidia-gpu-operator && make get
+}
+function gpu_up() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/nvidia-gpu-operator && make local wait test
+}
+function gpu_down() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/nvidia-gpu-operator && make down
+}
+
+if [ "$1" == "" ]; then
+    help
+elif [ "$1" == "help" ]; then
+    if [ "$2" == "k8s" ]; then
+        help
+    else
+        help
+	exit 1
+    fi
+elif [ "$1" == "init" ]; then
+    init
+elif [ "$1" == "k8s" ]; then
+    if [ "$2" == "get" ]; then
+        k8s_get
+    elif [ "$2" == "up" ]; then
+        k8s_up
+    elif [ "$2" == "down" ]; then
+        k8s_down
+    elif [ "$2" == "redo" ]; then
+        k8s_redo
+    else
+        help
+	exit 1
+    fi
+elif [ "$1" == "gpu" ]; then
+    if [ "$2" == "get" ]; then
+        gpu_get
+    elif [ "$2" == "up" ]; then
+        gpu_up
+    elif [ "$2" == "down" ]; then
+        gpu_down
+    else
+        help
+    fi
+else
+    help
+    exit 1
+fi
