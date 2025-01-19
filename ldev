@@ -2,20 +2,30 @@
 
 ldevRoot="$HOME/.ldev"
 k8sProj="k8s-services"
+mysql="infra-mysql@8.2.0"
 
 function help() {
-    echo "Usage: $0 arg1 arg2 arg3 ..."
-    echo "Arguments:"
-    echo '├─ help.....show this help message'
-    echo '│  ├─ k8s...show help message for argument 'k8s''
-    echo '│  └─ gpu...show help message for argument 'gpu''
-    echo '├─ init.....initialize files for ldev to use under '"$ldevRoot"
-    echo '├─ k8s......get/up/down for k8s with colima/k3s'
-    echo '│  ├─ get...get info of k8s'
-    echo '│  ├─ up....start k8s'
-    echo '│  ├─ down..stop k8s'
-    echo '│  └─ redo..recreate k8s'
-    echo '└─ gpu......get/up/down for nvidia gpu operator'
+    cat <<EOF
+Usage: $0 arg1 arg2 arg3 ...
+Arguments:"
+├─ help.....show this help message
+│  ├─ k8s...show help message for argument 'k8s'
+│  └─ gpu...show help message for argument 'gpu'
+├─ init.....initialize files for ldev to use under $ldevRoot
+├─ k8s......get/up/down for k8s with colima/k3s
+│  ├─ get...get info of k8s
+│  ├─ up....start k8s
+│  ├─ down..stop k8s
+│  └─ redo..recreate k8s
+├─ gpu......get/up/down for nvidia gpu operator
+│  ├─ get...get info of nvidia gpu operator
+│  ├─ up....start nvidia gpu operator
+│  └─ down..stop nvidia gpu operator
+├─ mysql....get/up/down for mysql
+│  ├─ get...get info of mysql
+│  ├─ up....start mysql
+│  └─ down..stop mysql
+EOF
 }
 
 function init() {
@@ -73,6 +83,22 @@ function gpu_down() {
     check_init
     cd "$ldevRoot"/"$k8sProj"/nvidia-gpu-operator && make down
 }
+function mysql_get() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$mysql" && make get
+}
+function mysql_up() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$mysql" && make local wait test
+}
+function mysql_down() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$mysql" && make down
+}
+function mysql_cli() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$mysql" && make cli
+}
 
 if [ "$1" == "" ]; then
     help
@@ -105,6 +131,18 @@ elif [ "$1" == "gpu" ]; then
         gpu_up
     elif [ "$2" == "down" ]; then
         gpu_down
+    else
+        help
+    fi
+elif [ "$1" == "mysql" ]; then
+    if [ "$2" == "get" ]; then
+        mysql_get
+    elif [ "$2" == "up" ]; then
+        mysql_up
+    elif [ "$2" == "down" ]; then
+        mysql_down
+    elif [ "$2" == "cli" ]; then
+        mysql_cli
     else
         help
     fi
