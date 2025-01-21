@@ -22,6 +22,15 @@ ldev help  # prints out how to use
 ldev init  # prepared ~/.ldev/ folder and download ~/.ldev/k8s-services repo
 ```
 
+## Components
+1. k8s
+2. gpu
+3. mysql
+4. pgsql
+5. redis
+6. mongo
+7. ollama
+
 ## MySQL
 ```BASH
 ldev mysql up  # start mysql in k8s

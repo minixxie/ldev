@@ -3,6 +3,7 @@
 ldevRoot="$HOME/.ldev"
 k8sProj="k8s-services"
 mysql="infra-mysql@8.2.0"
+pgsql="infra-pgsql@15.1.0"
 redis="infra-redis-cluster"
 mongo="infra-mongodb@7.0.5"
 ollama="ai-ollama"
@@ -30,6 +31,11 @@ Arguments:"
 │  ├─ up....start mysql
 │  ├─ down..stop mysql
 │  └─ cli...invoke mysql cli
+├─ pgsql....get/up/down for pgsql
+│  ├─ get...get info of pgsql
+│  ├─ up....start pgsql
+│  ├─ down..stop pgsql
+│  └─ cli...invoke pgsql cli
 ├─ redis....get/up/down for redis-cluster
 │  ├─ get...get info of redis-cluster
 │  ├─ up....start redis-cluster
@@ -125,6 +131,22 @@ function mysql_cli() {
     check_init
     cd "$ldevRoot"/"$k8sProj"/"$mysql" && make cli
 }
+function pgsql_get() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$pgsql" && make get
+}
+function pgsql_up() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$pgsql" && make img local wait test
+}
+function pgsql_down() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$pgsql" && make down
+}
+function pgsql_cli() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$pgsql" && make cli
+}
 function redis_get() {
     check_init
     cd "$ldevRoot"/"$k8sProj"/"$redis" && make get
@@ -219,6 +241,18 @@ elif [ "$1" == "mysql" ]; then
         mysql_down
     elif [ "$2" == "cli" ]; then
         mysql_cli
+    else
+        help
+    fi
+elif [ "$1" == "pgsql" ]; then
+    if [ "$2" == "get" ]; then
+        pgsql_get
+    elif [ "$2" == "up" ]; then
+        pgsql_up
+    elif [ "$2" == "down" ]; then
+        pgsql_down
+    elif [ "$2" == "cli" ]; then
+        pgsql_cli
     else
         help
     fi
