@@ -13,6 +13,7 @@ Arguments:"
 ├─ help.....show this help message
 │  ├─ k8s...show help message for argument 'k8s'
 │  └─ gpu...show help message for argument 'gpu'
+├─ install..download & install the 'ldev' script, upgrade if already exists
 ├─ init.....initialize files for ldev to use under $ldevRoot
 ├─ k8s......get/up/down for k8s with colima/k3s
 │  ├─ get...get info of k8s
@@ -39,6 +40,12 @@ Arguments:"
 │  ├─ down..stop mongodb
 │  └─ cli...invoke mongodb cli
 EOF
+}
+
+function install() {
+	sudo curl https://raw.githubusercontent.com/minixxie/ldev/refs/heads/main/ldev | \
+	sudo tee /usr/local/bin/ldev > /dev/null \
+	&& sudo chmod 755 /usr/local/bin/ldev
 }
 
 function init() {
@@ -154,6 +161,8 @@ elif [ "$1" == "help" ]; then
         help
 	exit 1
     fi
+elif [ "$1" == "install" ]; then
+    install
 elif [ "$1" == "init" ]; then
     init
 elif [ "$1" == "k8s" ]; then

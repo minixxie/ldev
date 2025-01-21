@@ -4,9 +4,12 @@ A single shell-script to setup local development environment. Making use of http
 
 # Download and install
 ```BASH
-curl https://raw.githubusercontent.com/minixxie/ldev/refs/heads/main/ldev | \
-	sudo tee /usr/local/bin/ldev > /dev/null \
-	&& sudo chmod 755 /usr/local/bin/ldev
+curl -sSL https://raw.githubusercontent.com/minixxie/ldev/refs/heads/main/ldev | bash -s -- install
+```
+
+# Upgrade afterwards
+```BASH
+ldev install
 ```
 
 # Howto
