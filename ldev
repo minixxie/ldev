@@ -47,7 +47,7 @@ function init() {
         chmod 700 "$ldevRoot"
     fi
     if ! [ -d "$ldevRoot"/"$k8sProj" ]; then
-        cd "$ldevRoot" && git clone https://github.com/minixxie/k8s-services.git > /dev/null
+        cd "$ldevRoot" && git clone --depth 1 https://github.com/minixxie/k8s-services.git > /dev/null
     fi
     cd "$ldevRoot"/"$k8sProj" && git pull --rebase
     echo "OK"
