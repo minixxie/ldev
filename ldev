@@ -5,6 +5,7 @@ k8sProj="k8s-services"
 mysql="infra-mysql@8.2.0"
 redis="infra-redis-cluster"
 mongo="infra-mongodb@7.0.5"
+ollama="ai-ollama"
 
 function help() {
     cat <<EOF
@@ -39,6 +40,11 @@ Arguments:"
 │  ├─ up....start mongodb
 │  ├─ down..stop mongodb
 │  └─ cli...invoke mongodb cli
+├─ ollama...get/up/down for ollama
+│  ├─ get...get info of ollama
+│  ├─ up....start ollama
+│  ├─ down..stop ollama
+│  └─ test..test ollama
 EOF
 }
 
@@ -97,7 +103,7 @@ function gpu_get() {
 }
 function gpu_up() {
     check_init
-    cd "$ldevRoot"/"$k8sProj"/nvidia-gpu-operator && make local wait test
+    cd "$ldevRoot"/"$k8sProj"/nvidia-gpu-operator && make img local wait test
 }
 function gpu_down() {
     check_init
@@ -109,7 +115,7 @@ function mysql_get() {
 }
 function mysql_up() {
     check_init
-    cd "$ldevRoot"/"$k8sProj"/"$mysql" && make local wait test
+    cd "$ldevRoot"/"$k8sProj"/"$mysql" && make img local wait test
 }
 function mysql_down() {
     check_init
@@ -125,7 +131,7 @@ function redis_get() {
 }
 function redis_up() {
     check_init
-    cd "$ldevRoot"/"$k8sProj"/"$redis" && make local wait test
+    cd "$ldevRoot"/"$k8sProj"/"$redis" && make img local wait test
 }
 function redis_down() {
     check_init
@@ -141,7 +147,7 @@ function mongo_get() {
 }
 function mongo_up() {
     check_init
-    cd "$ldevRoot"/"$k8sProj"/"$mongo" && make local wait test
+    cd "$ldevRoot"/"$k8sProj"/"$mongo" && make img local wait test
 }
 function mongo_down() {
     check_init
@@ -150,6 +156,22 @@ function mongo_down() {
 function mongo_cli() {
     check_init
     cd "$ldevRoot"/"$k8sProj"/"$mongo" && make cli
+}
+function ollama_get() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$ollama" && make get
+}
+function ollama_up() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$ollama" && make img local wait test
+}
+function ollama_down() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$ollama" && make down
+}
+function ollama_test() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$ollama" && make test
 }
 
 if [ "$1" == "" ]; then
@@ -221,6 +243,18 @@ elif [ "$1" == "mongo" ]; then
         mongo_down
     elif [ "$2" == "cli" ]; then
         mongo_cli
+    else
+        help
+    fi
+elif [ "$1" == "ollama" ]; then
+    if [ "$2" == "get" ]; then
+        ollama_get
+    elif [ "$2" == "up" ]; then
+        ollama_up
+    elif [ "$2" == "down" ]; then
+        ollama_down
+    elif [ "$2" == "test" ]; then
+        ollama_test
     else
         help
     fi
