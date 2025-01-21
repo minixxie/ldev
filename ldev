@@ -270,7 +270,6 @@ EOF
 function gen_containerfile() {
     if ! [ -f Containerfile ]; then
         if ! [ -f Dockerfile ]; then
-            echo "GENERATE"
             # Java/Kotlin
             if [ -f build.gradle -o -f pom.xml ]; then
                 gen_jdk_containerfile
