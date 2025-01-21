@@ -43,7 +43,7 @@ EOF
 }
 
 function install() {
-	sudo curl https://raw.githubusercontent.com/minixxie/ldev/refs/heads/main/ldev | \
+	sudo curl -sSL https://raw.githubusercontent.com/minixxie/ldev/refs/heads/main/ldev | \
 	sudo tee /usr/local/bin/ldev > /dev/null \
 	&& sudo chmod 755 /usr/local/bin/ldev
 }
