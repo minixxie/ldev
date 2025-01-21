@@ -252,7 +252,7 @@ EOF
         fi
 
 cat <<EOF >> ./.ldev/Containerfile
-FROM minixxie/eclipse-temurin:21.02_13-jre
+FROM minixxie/eclipse-temurin:21.0.2_13-jre
 
 ARG APP
 ENV APP=\${APP}
