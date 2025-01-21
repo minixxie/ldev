@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Reference: https://github.com/minixxie/ldev
+
 ldevRoot="$HOME/.ldev"
 k8sProj="k8s-services"
 mysql="infra-mysql@8.2.0"
