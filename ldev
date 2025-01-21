@@ -274,8 +274,13 @@ function gen_containerfile() {
             # Java/Kotlin
             if [ -f build.gradle -o -f pom.xml ]; then
                 gen_jdk_containerfile
+		echo ./.ldev/Containerfile
             fi
+        else
+            echo Dockerfile
         fi
+    else
+        echo Containerfile
     fi
 }
 
@@ -296,21 +301,14 @@ function build() {
         grep "^build:" Makefile > /dev/null
         if [ $? -eq 0 ]; then
             make build  # assuming Makefile is there and build target is there for building docker image
-        else
-            echo >&2 "WARN: Makefile and the target 'build:' (to use nerdctl to build the container image) are not there."
-            echo >&2 "      Auto-generate for it..."
-	    gen_containerfile
-            app=$(read_app)
-	    nerdctl --namespace=k8s.io build . -f ./.ldev/Containerfile -t local/$app:dont_push --build-arg APP=$app
-	    #exit 1
-            #app=$(basename $(pwd))
-            #if [ -f Containerfile ]; then
-            #    nerdctl --namespace=k8s.io build . -f Containerfile -t local/$app:dont_push --build-arg APP=app
-            #elif [ -f Dockerfile ]; then
-            #    nerdctl --namespace=k8s.io build . -f Dockerfile -t local/$app:dont_push --build-arg APP=app
-            #fi
-        fi
+            return 0
+	fi
     fi
+    echo >&2 "WARN: Makefile and the target 'build:' (to use nerdctl to build the container image) are not there."
+    echo >&2 "      Auto-generate for it..."
+    containerfile=$(gen_containerfile)
+    app=$(read_app)
+    nerdctl --namespace=k8s.io build . -f $containerfile -t local/$app:dont_push --build-arg APP=$app
 }
 
 function up() {
