@@ -51,6 +51,9 @@ Arguments:"
 │  ├─ up....start ollama
 │  ├─ down..stop ollama
 │  └─ test..test ollama
+├─ get......get info for the application in the current folder (check for kustomization/ folder)
+├─ up.......start the application in the current folder (check for kustomization/ folder)
+├─ down.....stop the application in the current folder (check for kustomization/ folder)
 EOF
 }
 
@@ -196,6 +199,55 @@ function ollama_test() {
     cd "$ldevRoot"/"$k8sProj"/"$ollama" && make test
 }
 
+function get() {
+    check_init
+    if [ -d "kustomization" ]; then
+        if [ -d "kustomization/overlays/local" ]; then
+            kubectl get -k ./kustomization/overlays/local
+        else
+            kubectl get -k ./kustomization/base
+        fi
+    fi
+}
+function build() {
+    check_init
+    if [ -f Makefile ]; then
+        grep "^build:" Makefile > /dev/null
+        if [ $? -eq 0 ]; then
+            make build  # assuming Makefile is there and build target is there for building docker image
+        else
+            app=$(basename $(pwd))
+            if [ -f Containerfile ]; then
+                nerdctl --namespace=k8s.io build . -f Containerfile -t local/$app:dont_push --build-arg APP=app
+            elif [ -f Dockerfile ]; then
+                nerdctl --namespace=k8s.io build . -f Dockerfile -t local/$app:dont_push --build-arg APP=app
+            fi
+        fi
+    fi
+}
+
+function up() {
+    check_init
+    build
+    if [ -d "kustomization" ]; then
+        if [ -d "kustomization/overlays/local" ]; then
+            kubectl apply -k ./kustomization/overlays/local
+        else
+            kubectl apply -k ./kustomization/base
+        fi
+    fi
+}
+function down() {
+    check_init
+    if [ -d "kustomization" ]; then
+        if [ -d "kustomization/overlays/local" ]; then
+            kubectl delete -k ./kustomization/overlays/local
+        else
+            kubectl delete -k ./kustomization/base
+        fi
+    fi
+}
+
 if [ "$1" == "" ]; then
     help
 elif [ "$1" == "help" ]; then
@@ -292,6 +344,12 @@ elif [ "$1" == "ollama" ]; then
     else
         help
     fi
+elif [ "$1" == "get" ]; then
+    get
+elif [ "$1" == "up" ]; then
+    up
+elif [ "$1" == "down" ]; then
+    down
 else
     help
     exit 1
