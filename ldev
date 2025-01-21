@@ -2,6 +2,13 @@
 
 # Reference: https://github.com/minixxie/ldev
 
+if [ "$(which yq)" == "" ]; then
+    echo >&2 "WARN: yq command is missing, please install with 'pip3 isntall yq'."
+fi
+if [ "$(which kubectl)" == "" ]; then
+    echo >&2 "WARN: kubectl command is missing, please install it accordingly."
+fi
+
 ldevRoot="$HOME/.ldev"
 k8sProj="k8s-services"
 mysql="infra-mysql@8.2.0"
@@ -74,6 +81,7 @@ function init() {
         cd "$ldevRoot" && git clone --depth 1 https://github.com/minixxie/k8s-services.git > /dev/null
     fi
     cd "$ldevRoot"/"$k8sProj" && git pull --rebase
+
     echo "OK"
 }
 function check_init() {
@@ -201,8 +209,79 @@ function ollama_test() {
     cd "$ldevRoot"/"$k8sProj"/"$ollama" && make test
 }
 
+function read_app() {
+    if [ ! -f ldev.yaml ]; then
+        folderName=$(basename $(pwd))
+        cat <<EOF > ldev.yaml
+ldev:
+  app: $folderName
+EOF
+    fi
+    app=$(yq -r '.ldev.app' < ldev.yaml)
+    if [ "$app" == "" ]; then
+        echo >&2 "ERR: ldev.app is missing in ldev.yaml"
+        exit 1
+    fi
+    echo "$app"
+}
+
+function gen_jdk_containerfile() {
+
+    if ! [ -f ./.ldev/Containerfile ]; then
+        mkdir -p ./.ldev/
+        cat <<EOF > ./.ldev/Containerfile
+FROM openjdk:8-jdk as jdk
+
+ARG APP
+
+WORKDIR /app
+
+EOF
+
+        if [ -f build.gradle ]; then
+cat <<EOF >> ./.ldev/Containerfile
+ADD ./gradle ./gradle
+ADD ./gradlew ./
+
+RUN ./gradlew wrapper --gradle-version=7.6.2
+
+ADD . .
+RUN ./gradlew bootJar --no-daemon -x test
+
+EOF
+        fi
+
+cat <<EOF >> ./.ldev/Containerfile
+FROM minixxie/eclipse-temurin:21.02_13-jre
+
+ARG APP
+ENV APP=\${APP}
+
+COPY --from=jdk /app/build/libs/*.jar /app.jar
+RUN /update-tz.sh
+
+EXPOSE 8080
+EXPOSE 9999
+EOF
+    fi
+
+}
+
+function gen_containerfile() {
+    if ! [ -f Containerfile ]; then
+        if ! [ -f Dockerfile ]; then
+            echo "GENERATE"
+            # Java/Kotlin
+            if [ -f build.gradle -o -f pom.xml ]; then
+                gen_jdk_containerfile
+            fi
+        fi
+    fi
+}
+
 function get() {
     check_init
+    #app=$(read_app)
     if [ -d "kustomization" ]; then
         if [ -d "kustomization/overlays/local" ]; then
             kubectl get -k ./kustomization/overlays/local
@@ -218,12 +297,18 @@ function build() {
         if [ $? -eq 0 ]; then
             make build  # assuming Makefile is there and build target is there for building docker image
         else
-            app=$(basename $(pwd))
-            if [ -f Containerfile ]; then
-                nerdctl --namespace=k8s.io build . -f Containerfile -t local/$app:dont_push --build-arg APP=app
-            elif [ -f Dockerfile ]; then
-                nerdctl --namespace=k8s.io build . -f Dockerfile -t local/$app:dont_push --build-arg APP=app
-            fi
+            echo >&2 "WARN: Makefile and the target 'build:' (to use nerdctl to build the container image) are not there."
+            echo >&2 "      Auto-generate for it..."
+	    gen_containerfile
+            app=$(read_app)
+	    nerdctl --namespace=k8s.io build . -f ./.ldev/Containerfile -t local/$app:dont_push --build-arg APP=$app
+	    #exit 1
+            #app=$(basename $(pwd))
+            #if [ -f Containerfile ]; then
+            #    nerdctl --namespace=k8s.io build . -f Containerfile -t local/$app:dont_push --build-arg APP=app
+            #elif [ -f Dockerfile ]; then
+            #    nerdctl --namespace=k8s.io build . -f Dockerfile -t local/$app:dont_push --build-arg APP=app
+            #fi
         fi
     fi
 }
