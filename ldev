@@ -3,6 +3,8 @@
 ldevRoot="$HOME/.ldev"
 k8sProj="k8s-services"
 mysql="infra-mysql@8.2.0"
+redis="infra-redis-cluster"
+mongo="infra-mongodb@7.0.5"
 
 function help() {
     cat <<EOF
@@ -24,7 +26,18 @@ Arguments:"
 ├─ mysql....get/up/down for mysql
 │  ├─ get...get info of mysql
 │  ├─ up....start mysql
-│  └─ down..stop mysql
+│  ├─ down..stop mysql
+│  └─ cli...invoke mysql cli
+├─ redis....get/up/down for redis-cluster
+│  ├─ get...get info of redis-cluster
+│  ├─ up....start redis-cluster
+│  ├─ down..stop redis-cluster
+│  └─ cli...invoke redis-cluster cli
+├─ mongo....get/up/down for mongodb
+│  ├─ get...get info of mongodb
+│  ├─ up....start mongodb
+│  ├─ down..stop mongodb
+│  └─ cli...invoke mongodb cli
 EOF
 }
 
@@ -99,6 +112,38 @@ function mysql_cli() {
     check_init
     cd "$ldevRoot"/"$k8sProj"/"$mysql" && make cli
 }
+function redis_get() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$redis" && make get
+}
+function redis_up() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$redis" && make local wait test
+}
+function redis_down() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$redis" && make down
+}
+function redis_cli() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$redis" && make cli
+}
+function mongo_get() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$mongo" && make get
+}
+function mongo_up() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$mongo" && make local wait test
+}
+function mongo_down() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$mongo" && make down
+}
+function mongo_cli() {
+    check_init
+    cd "$ldevRoot"/"$k8sProj"/"$mongo" && make cli
+}
 
 if [ "$1" == "" ]; then
     help
@@ -143,6 +188,30 @@ elif [ "$1" == "mysql" ]; then
         mysql_down
     elif [ "$2" == "cli" ]; then
         mysql_cli
+    else
+        help
+    fi
+elif [ "$1" == "redis" ]; then
+    if [ "$2" == "get" ]; then
+        redis_get
+    elif [ "$2" == "up" ]; then
+        redis_up
+    elif [ "$2" == "down" ]; then
+        redis_down
+    elif [ "$2" == "cli" ]; then
+        redis_cli
+    else
+        help
+    fi
+elif [ "$1" == "mongo" ]; then
+    if [ "$2" == "get" ]; then
+        mongo_get
+    elif [ "$2" == "up" ]; then
+        mongo_up
+    elif [ "$2" == "down" ]; then
+        mongo_down
+    elif [ "$2" == "cli" ]; then
+        mongo_cli
     else
         help
     fi
