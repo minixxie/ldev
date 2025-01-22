@@ -236,6 +236,20 @@ function yaml_read_java() {
     # sample: "8080\t8081\t/actuator/health/readiness\tlocalk8s"
     echo "$httpPort	$actuatorPort	$actuatorReadinessPath	$springProfilesActive"
 }
+function yaml_read_golang() {
+    init
+    httpPort=$(yq -r '.ldev.golang.httpPort' < ldev.yaml)
+    if [ x"$httpPort" == "" ]; then
+        httpPort=80
+    fi
+    grpcPort=$(yq -r '.ldev.golang.grpcPort' < ldev.yaml)
+    if [ x"$grpcPort" == "" ]; then
+        grpcPort=9090
+    fi
+
+    # sample: "80\t9090"
+    echo "$httpPort	$grpcPort"
+}
 
 function gen_jdk_containerfile() {
 
@@ -282,12 +296,68 @@ EOF
 
 }
 
+function gen_golang_containerfile() {
+
+    if ! [ -f ./Containerfile ]; then
+        golangConfig=$(yaml_read_golang)
+        httpPort=$(echo -n "$golangConfig" | cut -f 1)
+        grpcPort=$(echo -n "$golangConfig" | cut -f 2)
+        cat <<EOF > ./Containerfile
+FROM --platform=\$BUILDPLATFORM minixxie/golang:1.21.0 as golang
+
+ARG BUILDPLATFORM
+ARG APP
+
+ENV GOPATH=/usr/local/go
+WORKDIR \$GOPATH/src/\${APP}
+
+#ADD ./micro ./micro
+COPY ./go.mod .
+COPY ./go.sum .
+ADD ./scripts ./scripts
+RUN ./scripts/install-protoc-plugins.sh
+RUN go mod download
+
+ADD ./pb ./pb
+ADD ./buf.yaml ./buf.yaml
+ADD ./buf.lock ./buf.lock
+ADD ./buf.gen.yaml ./buf.gen.yaml
+RUN buf generate
+
+ADD . .
+RUN ./scripts/build.sh
+RUN cp ./bin/server /tmp/
+RUN cp ./bin/client /tmp/
+
+RUN cp ./gen/openapiv2/all.swagger.json /tmp/swagger.json
+
+FROM gcr.io/distroless/base
+COPY --from=golang /tmp/server /server
+COPY --from=golang /tmp/client /client
+# To be served with http://xxx/swagger.json (loaded by http://xxx/docs):
+COPY --from=golang /tmp/swagger.json /swagger.json
+
+# HTTP API via grpc-gateway
+EXPOSE $httpPort
+# gRPC
+EXPOSE $grpcPort
+ENTRYPOINT ["/server"]
+EOF
+    fi
+
+}
+
 function gen_containerfile() {
+    progLang=$(detect_prog_lang)
     if ! [ -f Containerfile ]; then
         if ! [ -f Dockerfile ]; then
             # Java/Kotlin
-            if [ -f build.gradle -o -f pom.xml ]; then
+            if [ "$progLang" == "java" ]; then
                 gen_jdk_containerfile
+		echo Containerfile
+            fi
+            if [ "$progLang" == "golang" ]; then
+                gen_golang_containerfile
 		echo Containerfile
             fi
         else
@@ -298,18 +368,45 @@ function gen_containerfile() {
     fi
 }
 
+function detect_prog_lang() {
+    if [ -f build.gradle ]; then
+        echo "java"
+	exit 0
+    fi
+    if [ -f pom.xml ]; then
+        echo "java"
+	exit 0
+    fi
+    if [ -f go.mod ]; then
+        echo "golang"
+	exit 0
+    fi
+}
+
 function init() {
     if [ ! -f ldev.yaml ]; then
         folderName=$(basename $(pwd))
+        progLang=$(detect_prog_lang)
         cat <<EOF > ldev.yaml
 ldev:
   app: $folderName
-#  java:
-#    httpPort: 8080
-#    actuatorPort: 8081
-#    actuatorReadinessPath: /actuator/health/readiness
-#    springProfilesActive: localk8s  # requires ./src/main/resources/application-localk8s.yml
 EOF
+        if [ "$progLang" == "java" ]; then
+            cat <<EOF >> ldev.yaml
+  java:
+    httpPort: 8080
+    actuatorPort: 8081
+    actuatorReadinessPath: /actuator/health/readiness
+    springProfilesActive: localk8s  # requires ./src/main/resources/application-localk8s.yml
+EOF
+        fi
+        if [ "$progLang" == "golang" ]; then
+            cat <<EOF >> ldev.yaml
+  golang:
+    httpPort: 80
+    grpcPort: 9090
+EOF
+        fi
     fi
 }
 
@@ -353,32 +450,8 @@ function build() {
     nerdctl --namespace=k8s.io images | grep local/$app | grep dont_push
 }
 
-function up() {
-    build
-    if ! [ -d "kustomization" ]; then
-        echo >&2 "WARN: kustomization/ folder not found."
-        echo >&2 "      Auto-generate for it..."
-        mkdir -p ./kustomization
-        mkdir -p ./kustomization/base
-        mkdir -p ./kustomization/overlays
-        mkdir -p ./kustomization/overlays/local
+function gen_java_deployment() {
         app=$(yaml_read_app)
-        port=80
-        cat <<EOF > ./kustomization/base/kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - namespace.yaml
-  - deployment.yaml
-  - service.yaml
-  - ingress.yaml
-EOF
-        cat <<EOF > ./kustomization/base/namespace.yaml
-kind: Namespace
-apiVersion: v1
-metadata:
-  name: $app
-EOF
         javaConfig=$(yaml_read_java)
 	httpPort=$(echo -n "$javaConfig" | cut -f 1)
 	actuatorPort=$(echo -n "$javaConfig" | cut -f 2)
@@ -439,6 +512,84 @@ EOF
                 fieldRef:
                   fieldPath: status.hostIP
 EOF
+}
+function gen_golang_deployment() {
+        app=$(yaml_read_app)
+        golangConfig=$(yaml_read_golang)
+	httpPort=$(echo -n "$golangConfig" | cut -f 1)
+	grpcPort=$(echo -n "$golangConfig" | cut -f 2)
+        cat <<EOF > ./kustomization/base/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $app
+  namespace: $app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: $app
+  template:
+    metadata:
+      labels:
+        app: $app
+    spec:
+      containers:
+      - name: golang
+        image: local/$app:dont_push
+        imagePullPolicy: IfNotPresent
+        command: ["/server"]
+        ports:
+        - name: http
+          containerPort: $httpPort  # HTTP port
+        - name: grpc
+          containerPort: $grpcPort  # gRPC port
+        env:
+        # just in case useful for accessing any daemonset
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: MICRO_REDOC
+          value: "1"
+        - name: CORS_ORIGIN
+          value: "*"
+EOF
+}
+
+function up() {
+    build
+    if ! [ -d "kustomization" ]; then
+        echo >&2 "WARN: kustomization/ folder not found."
+        echo >&2 "      Auto-generate for it..."
+        mkdir -p ./kustomization
+        mkdir -p ./kustomization/base
+        mkdir -p ./kustomization/overlays
+        mkdir -p ./kustomization/overlays/local
+        app=$(yaml_read_app)
+        port=80
+        cat <<EOF > ./kustomization/base/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+EOF
+        cat <<EOF > ./kustomization/base/namespace.yaml
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: $app
+EOF
+        progLang=$(detect_prog_lang)
+        if [ "$progLang" == "java" ]; then
+            gen_java_deployment
+        elif [ "$progLang" == "golang" ]; then
+            gen_golang_deployment
+        fi
+
         cat <<EOF > ./kustomization/base/service.yaml
 apiVersion: v1
 kind: Service
