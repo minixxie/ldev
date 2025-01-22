@@ -65,6 +65,7 @@ Arguments:"
 ├─ up.......start the application in the current folder (check for kustomization/ folder)
 ├─ down.....stop the application in the current folder (check for kustomization/ folder)
 ├─ logs.....tail the logs of the application in the current folder (check for kustomization/ folder)
+├─ exec.....exec shell into the pod of the application in the current folder
 EOF
 }
 
@@ -307,18 +308,18 @@ EOF
 }
 
 function yaml_read_ns() {
-    app=
+    ns=
     if [ -f "kustomization/base/namespace.yaml" ]; then
-        app=$(grep "name:" kustomization/base/namespace.yaml | cut -f 2 -d: | sed 's/^[[:space]]*//' | sed 's/[[:space:]]*$//')
+        ns=$(grep "name:" kustomization/base/namespace.yaml | cut -f 2 -d: | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
     fi
-    echo $app
+    if [ "$ns" == "" ]; then
+        ns=$(yaml_read_app)
+    fi
+    echo $ns
 }
 
 function get() {
     ns=$(yaml_read_ns)
-    if [ "$ns" == "" ]; then
-        ns=$(yaml_read_app)
-    fi
     if [ -d "kustomization" ]; then
         if [ -d "kustomization/overlays/local" ]; then
             kubectl get -k ./kustomization/overlays/local
@@ -326,6 +327,7 @@ function get() {
             kubectl get -k ./kustomization/base
         fi
     fi
+    echo ""
     kubectl -n $ns get pod
 }
 function build() {
@@ -489,7 +491,12 @@ function down() {
 }
 
 function logs() {
-    true
+    ns=$(yaml_read_ns)
+    kubectl -n "$ns" logs -f $(kubectl -n "$ns" get pod | sed 1d | awk '{print $1}')
+}
+function pod_shell() {
+    ns=$(yaml_read_ns)
+    kubectl -n "$ns" exec -it $(kubectl -n "$ns" get pod | sed 1d | awk '{print $1}') -- sh -c 'bash || sh'
 }
 
 if [ "$1" == "" ]; then
@@ -598,6 +605,8 @@ elif [ "$1" == "down" ]; then
     down
 elif [ "$1" == "logs" ]; then
     logs 
+elif [ "$1" == "exec" ]; then
+    pod_shell
 else
     help
     exit 1
