@@ -393,12 +393,12 @@ spec:
               containerPort: $httpPort  # spring boot HTTP port
 EOF
         if [ "$actuatorPort" != "$httpPort" ]; then
-        cat <<EOF > ./kustomization/base/deployment.yaml
+        cat <<EOF >> ./kustomization/base/deployment.yaml
             - name: http-metrics
               containerPort: $actuatorPort  # spring boot actuator HTTP port
 EOF
         fi
-        cat <<EOF > ./kustomization/base/deployment.yaml
+        cat <<EOF >> ./kustomization/base/deployment.yaml
             - name: xxljob
               containerPort: 9999  # xxl-job HTTP port
           readinessProbe:
@@ -428,8 +428,8 @@ spec:
   ports:
     - name: http
       protocol: TCP
-      port: $port
-      targetPort: $port
+      port: $httpPort
+      targetPort: $httpPort
 EOF
         cat <<EOF > ./kustomization/base/ingress.yaml
 apiVersion: networking.k8s.io/v1
@@ -448,7 +448,7 @@ spec:
               service:
                 name: $app
                 port:
-                  number: $port
+                  number: $httpPort
 EOF
         cat <<EOF > ./kustomization/overlays/local/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
