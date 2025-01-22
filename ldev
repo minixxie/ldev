@@ -213,9 +213,8 @@ function read_app() {
 
 function gen_jdk_containerfile() {
 
-    if ! [ -f ./.ldev/Containerfile ]; then
-        mkdir -p ./.ldev/
-        cat <<EOF > ./.ldev/Containerfile
+    if ! [ -f ./Containerfile ]; then
+        cat <<EOF > ./Containerfile
 FROM openjdk:8-jdk as jdk
 
 ARG APP
@@ -225,7 +224,7 @@ WORKDIR /app
 EOF
 
         if [ -f build.gradle ]; then
-cat <<EOF >> ./.ldev/Containerfile
+cat <<EOF >> ./Containerfile
 ADD ./gradle ./gradle
 ADD ./gradlew ./
 
@@ -237,7 +236,7 @@ RUN ./gradlew bootJar --no-daemon -x test
 EOF
         fi
 
-cat <<EOF >> ./.ldev/Containerfile
+cat <<EOF >> ./Containerfile
 FROM minixxie/eclipse-temurin:21.0.2_13-jre
 
 ARG APP
@@ -259,7 +258,7 @@ function gen_containerfile() {
             # Java/Kotlin
             if [ -f build.gradle -o -f pom.xml ]; then
                 gen_jdk_containerfile
-		echo ./.ldev/Containerfile
+		echo Containerfile
             fi
         else
             echo Dockerfile
