@@ -11,6 +11,7 @@ fi
 
 ldevRoot="$HOME/.ldev"
 k8sProj="k8s-services"
+
 mysql="infra-mysql@8.2.0"
 pgsql="infra-pgsql@15.1.0"
 redis="infra-redis-cluster"
@@ -25,7 +26,6 @@ Arguments:"
 │  ├─ k8s...show help message for argument 'k8s'
 │  └─ gpu...show help message for argument 'gpu'
 ├─ install..download & install the 'ldev' script, upgrade if already exists
-├─ init.....initialize files for ldev to use under $ldevRoot
 ├─ k8s......get/up/down for k8s with colima/k3s
 │  ├─ get...get info of k8s
 │  ├─ up....start k8s
@@ -60,6 +60,7 @@ Arguments:"
 │  ├─ up....start ollama
 │  ├─ down..stop ollama
 │  └─ test..test ollama
+├─ init.....initialize ldev.yaml for the application in the current folder
 ├─ get......get info for the application in the current folder (check for kustomization/ folder)
 ├─ up.......start the application in the current folder (check for kustomization/ folder)
 ├─ down.....stop the application in the current folder (check for kustomization/ folder)
@@ -72,7 +73,7 @@ function install() {
 	&& sudo chmod 755 /usr/local/bin/ldev
 }
 
-function init() {
+function bootstrap() {
     if ! [ -d "$ldevRoot" ]; then
         mkdir -p "$ldevRoot"
         chmod 700 "$ldevRoot"
@@ -80,19 +81,7 @@ function init() {
     if ! [ -d "$ldevRoot"/"$k8sProj" ]; then
         cd "$ldevRoot" && git clone --depth 1 https://github.com/minixxie/k8s-services.git > /dev/null
     fi
-    cd "$ldevRoot"/"$k8sProj" && git pull --rebase
-
-    echo "OK"
-}
-function check_init() {
-    if ! [ -d "$ldevRoot" ]; then
-        echo >&2 "ERR: please run this first: $0 init"
-	exit 1
-    fi
-    if ! [ -d "$ldevRoot"/"$k8sProj" ]; then
-        echo >&2 "ERR: please run this first: $0 init"
-	exit 1
-    fi
+    cd "$ldevRoot"/"$k8sProj" && git pull --rebase > /dev/null
 }
 
 function k8s_get() {
@@ -104,119 +93,116 @@ function k8s_get() {
 }
 
 function k8s_up() {
-    true
+    bootstrap
+    echo >&2 "ERR: Not yet implemented."
+    exit 1
 }
 
 function k8s_down() {
-    true
+    bootstrap
+    echo >&2 "ERR: Not yet implemented."
+    exit 1
 }
 
 function k8s_redo() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj" && make -s k8s-redo
 }
 
 function gpu_get() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/nvidia-gpu-operator && make get
 }
 function gpu_up() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/nvidia-gpu-operator && make img local wait test
 }
 function gpu_down() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/nvidia-gpu-operator && make down
 }
 function mysql_get() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$mysql" && make get
 }
 function mysql_up() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$mysql" && make img local wait test
 }
 function mysql_down() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$mysql" && make down
 }
 function mysql_cli() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$mysql" && make cli
 }
 function pgsql_get() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$pgsql" && make get
 }
 function pgsql_up() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$pgsql" && make img local wait test
 }
 function pgsql_down() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$pgsql" && make down
 }
 function pgsql_cli() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$pgsql" && make cli
 }
 function redis_get() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$redis" && make get
 }
 function redis_up() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$redis" && make img local wait test
 }
 function redis_down() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$redis" && make down
 }
 function redis_cli() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$redis" && make cli
 }
 function mongo_get() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$mongo" && make get
 }
 function mongo_up() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$mongo" && make img local wait test
 }
 function mongo_down() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$mongo" && make down
 }
 function mongo_cli() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$mongo" && make cli
 }
 function ollama_get() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$ollama" && make get
 }
 function ollama_up() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$ollama" && make img local wait test
 }
 function ollama_down() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$ollama" && make down
 }
 function ollama_test() {
-    check_init
+    bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$ollama" && make test
 }
 
 function read_app() {
-    if [ ! -f ldev.yaml ]; then
-        folderName=$(basename $(pwd))
-        cat <<EOF > ldev.yaml
-ldev:
-  app: $folderName
-EOF
-    fi
     app=$(yq -r '.ldev.app' < ldev.yaml)
     if [ "$app" == "" ]; then
         echo >&2 "ERR: ldev.app is missing in ldev.yaml"
@@ -283,8 +269,17 @@ function gen_containerfile() {
     fi
 }
 
+function init() {
+    if [ ! -f ldev.yaml ]; then
+        folderName=$(basename $(pwd))
+        cat <<EOF > ldev.yaml
+ldev:
+  app: $folderName
+EOF
+    fi
+}
+
 function get() {
-    check_init
     #app=$(read_app)
     if [ -d "kustomization" ]; then
         if [ -d "kustomization/overlays/local" ]; then
@@ -295,7 +290,6 @@ function get() {
     fi
 }
 function build() {
-    check_init
     if [ -f Makefile ]; then
         grep "^build:" Makefile > /dev/null
         if [ $? -eq 0 ]; then
@@ -305,13 +299,14 @@ function build() {
     fi
     echo >&2 "WARN: Makefile and the target 'build:' (to use nerdctl to build the container image) are not there."
     echo >&2 "      Auto-generate for it..."
+    init
     containerfile=$(gen_containerfile)
     app=$(read_app)
     nerdctl --namespace=k8s.io build . -f $containerfile -t local/$app:dont_push --build-arg APP=$app
+    nerdctl --namespace=k8s.io images | grep local/$app | grep dont_push
 }
 
 function up() {
-    check_init
     build
     if [ -d "kustomization" ]; then
         if [ -d "kustomization/overlays/local" ]; then
@@ -322,7 +317,6 @@ function up() {
     fi
 }
 function down() {
-    check_init
     if [ -d "kustomization" ]; then
         if [ -d "kustomization/overlays/local" ]; then
             kubectl delete -k ./kustomization/overlays/local
@@ -343,8 +337,6 @@ elif [ "$1" == "help" ]; then
     fi
 elif [ "$1" == "install" ]; then
     install
-elif [ "$1" == "init" ]; then
-    init
 elif [ "$1" == "k8s" ]; then
     if [ "$2" == "get" ]; then
         k8s_get
@@ -428,8 +420,12 @@ elif [ "$1" == "ollama" ]; then
     else
         help
     fi
+elif [ "$1" == "init" ]; then
+    init
 elif [ "$1" == "get" ]; then
     get
+elif [ "$1" == "build" ]; then
+    build
 elif [ "$1" == "up" ]; then
     up
 elif [ "$1" == "down" ]; then
