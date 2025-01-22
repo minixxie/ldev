@@ -233,6 +233,9 @@ function yaml_read_java() {
 function gen_jdk_containerfile() {
 
     if ! [ -f ./Containerfile ]; then
+        javaConfig=$(yaml_read_java)
+        httpPort=$(echo -n "$javaConfig" | cut -f 1)
+        actuatorPort=$(echo -n "$javaConfig" | cut -f 2)
         cat <<EOF > ./Containerfile
 FROM openjdk:8-jdk as jdk
 
@@ -264,7 +267,8 @@ ENV APP=\${APP}
 COPY --from=jdk /app/build/libs/*.jar /app.jar
 RUN /update-tz.sh
 
-EXPOSE 8080
+EXPOSE $httpPort
+EXPOSE $actuatorPort
 EXPOSE 9999
 EOF
     fi
