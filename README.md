@@ -38,7 +38,8 @@ ldev mysql cli  # use mysql cli to connect to the mysql server
 ```
 
 ## My Application
-`ldev` command can also configure and execute my application in k8s as deployments.
+`ldev` command can also configure and execute my application in k8s as deployments, with minimal effort. You don't need to write the Containerfile/kustomization files on your own. The `ldev` script will detect your project and generate them for you. And minimized configurations can be customized in `ldev.yaml` at the root folder of your project.
+
 Step 1: initialize the yaml config file `ldev.yaml`
 ```BASH
 ldev init
