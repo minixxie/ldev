@@ -64,6 +64,7 @@ Arguments:"
 ├─ get......get info for the application in the current folder (check for kustomization/ folder)
 ├─ up.......start the application in the current folder (check for kustomization/ folder)
 ├─ down.....stop the application in the current folder (check for kustomization/ folder)
+├─ logs.....tail the logs of the application in the current folder (check for kustomization/ folder)
 EOF
 }
 
@@ -305,8 +306,19 @@ EOF
     fi
 }
 
+function yaml_read_ns() {
+    app=
+    if [ -f "kustomization/base/namespace.yaml" ]; then
+        app=$(grep "name:" kustomization/base/namespace.yaml | cut -f 2 -d: | sed 's/^[[:space]]*//' | sed 's/[[:space:]]*$//')
+    fi
+    echo $app
+}
+
 function get() {
-    #app=$(yaml_read_app)
+    ns=$(yaml_read_ns)
+    if [ "$ns" == "" ]; then
+        ns=$(yaml_read_app)
+    fi
     if [ -d "kustomization" ]; then
         if [ -d "kustomization/overlays/local" ]; then
             kubectl get -k ./kustomization/overlays/local
@@ -314,6 +326,7 @@ function get() {
             kubectl get -k ./kustomization/base
         fi
     fi
+    kubectl -n $ns get pod
 }
 function build() {
     if [ -f Makefile ]; then
@@ -475,6 +488,10 @@ function down() {
     fi
 }
 
+function logs() {
+    true
+}
+
 if [ "$1" == "" ]; then
     help
 elif [ "$1" == "help" ]; then
@@ -579,6 +596,8 @@ elif [ "$1" == "up" ]; then
     up
 elif [ "$1" == "down" ]; then
     down
+elif [ "$1" == "logs" ]; then
+    logs 
 else
     help
     exit 1
