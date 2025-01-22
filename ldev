@@ -202,13 +202,32 @@ function ollama_test() {
     cd "$ldevRoot"/"$k8sProj"/"$ollama" && make test
 }
 
-function read_app() {
+function yaml_read_app() {
+    init
     app=$(yq -r '.ldev.app' < ldev.yaml)
     if [ "$app" == "" ]; then
         echo >&2 "ERR: ldev.app is missing in ldev.yaml"
         exit 1
     fi
     echo "$app"
+}
+function yaml_read_java() {
+    init
+    httpPort=$(yq -r '.ldev.java.httpPort' < ldev.yaml)
+    if [ x"$httpPort" == "" ]; then
+        httpPort=8080
+    fi
+    actuatorPort=$(yq -r '.ldev.java.actuatorPort' < ldev.yaml)
+    if [ x"$actuatorPort" == "" ]; then
+        actuatorPort=8081
+    fi
+    actuatorReadinessPath=$(yq -r '.ldev.java.actuatorReadinessPath' < ldev.yaml)
+    if [ x"$actuatorReadinessPath" == "" ]; then
+        actuatorReadinessPath=/actuator/health/readiness
+    fi
+
+    # sample: "8080\t8081\t/actuator/health/readiness"
+    echo "$httpPort	$actuatorPort	$actuatorReadinessPath"
 }
 
 function gen_jdk_containerfile() {
@@ -274,12 +293,16 @@ function init() {
         cat <<EOF > ldev.yaml
 ldev:
   app: $folderName
+#  java:
+#    httpPort: 8080
+#    actuatorPort: 8081
+#    actuatorReadinessPath: /actuator/health/readiness
 EOF
     fi
 }
 
 function get() {
-    #app=$(read_app)
+    #app=$(yaml_read_app)
     if [ -d "kustomization" ]; then
         if [ -d "kustomization/overlays/local" ]; then
             kubectl get -k ./kustomization/overlays/local
@@ -300,21 +323,144 @@ function build() {
     echo >&2 "      Auto-generate for it..."
     init
     containerfile=$(gen_containerfile)
-    app=$(read_app)
+    app=$(yaml_read_app)
     nerdctl --namespace=k8s.io build . -f $containerfile -t local/$app:dont_push --build-arg APP=$app
     nerdctl --namespace=k8s.io images | grep local/$app | grep dont_push
 }
 
 function up() {
     build
-    if [ -d "kustomization" ]; then
-        if [ -d "kustomization/overlays/local" ]; then
-            kubectl apply -k ./kustomization/overlays/local
-        else
-            kubectl apply -k ./kustomization/base
+    if ! [ -d "kustomization" ]; then
+        echo >&2 "WARN: kustomization/ folder not found."
+        echo >&2 "      Auto-generate for it..."
+        mkdir -p ./kustomization
+        mkdir -p ./kustomization/base
+        mkdir -p ./kustomization/overlays
+        mkdir -p ./kustomization/overlays/local
+        app=$(yaml_read_app)
+        port=80
+        cat <<EOF > ./kustomization/base/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+EOF
+        cat <<EOF > ./kustomization/base/namespace.yaml
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: $app
+EOF
+        javaConfig=$(yaml_read_java)
+	httpPort=$(echo -n "$javaConfig" | cut -f 1)
+	actuatorPort=$(echo -n "$javaConfig" | cut -f 2)
+	actuatorReadinessPath=$(echo -n "$javaConfig" | cut -f 3)
+        cat <<EOF > ./kustomization/base/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $app
+  namespace: $app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: $app
+  template:
+    metadata:
+      labels:
+        app: $app
+    spec:
+      containers:
+        - name: java
+          image: local/$app:dont_push
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -c
+            - |
+              /update-tz.sh
+              java --add-opens java.base/java.lang=ALL-UNNAMED -jar /app.jar
+          ports:
+            - name: http
+              containerPort: $httpPort  # spring boot HTTP port
+EOF
+        if [ "$actuatorPort" != "$httpPort" ]; then
+        cat <<EOF > ./kustomization/base/deployment.yaml
+            - name: http-metrics
+              containerPort: $actuatorPort  # spring boot actuator HTTP port
+EOF
         fi
+        cat <<EOF > ./kustomization/base/deployment.yaml
+            - name: xxljob
+              containerPort: 9999  # xxl-job HTTP port
+          readinessProbe:
+            httpGet:
+              path: $actuatorReadinessPath
+              port: $actuatorPort
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          env:
+            - name: app
+              value: $app
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+EOF
+        cat <<EOF > ./kustomization/base/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: $app
+  namespace: $app
+spec:
+  selector:
+    app: $app
+  type: LoadBalancer
+  ports:
+    - name: http
+      protocol: TCP
+      port: $port
+      targetPort: $port
+EOF
+        cat <<EOF > ./kustomization/base/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: $app
+  namespace: $app
+spec:
+  rules:
+    - host: $app.local
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: $app
+                port:
+                  number: $port
+EOF
+        cat <<EOF > ./kustomization/overlays/local/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+EOF
+    fi
+
+    if [ -d "kustomization/overlays/local" ]; then
+        kubectl apply -k ./kustomization/overlays/local
+    else
+        kubectl apply -k ./kustomization/base
     fi
 }
+
 function down() {
     if [ -d "kustomization" ]; then
         if [ -d "kustomization/overlays/local" ]; then
