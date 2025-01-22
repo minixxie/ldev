@@ -606,6 +606,15 @@ spec:
       port: $httpPort
       targetPort: $httpPort
 EOF
+        if [ "$progLang" == "golang" ]; then
+            cat <<EOF >> ./kustomization/base/service.yaml
+    - name: grpc
+      protocol: TCP
+      port: $grpcPort
+      targetPort: $grpcPort
+EOF
+        fi
+
         cat <<EOF > ./kustomization/base/ingress.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
