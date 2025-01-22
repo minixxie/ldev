@@ -71,8 +71,9 @@ EOF
 
 function install() {
 	sudo curl -sSL https://raw.githubusercontent.com/minixxie/ldev/refs/heads/main/ldev | \
-	sudo tee /usr/local/bin/ldev > /dev/null \
-	&& sudo chmod 755 /usr/local/bin/ldev
+	sudo tee /usr/local/bin/ldev.new > /dev/null \
+	&& sudo chmod 755 /usr/local/bin/ldev.new \
+	&& sudo mv -f /usr/local/bin/ldev.new /usr/local/bin/ldev
 }
 
 function bootstrap() {
