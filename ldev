@@ -227,9 +227,13 @@ function yaml_read_java() {
     if [ x"$actuatorReadinessPath" == "" ]; then
         actuatorReadinessPath=/actuator/health/readiness
     fi
+    springProfilesActive=$(yq -r '.ldev.java.springProfilesActive' < ldev.yaml)
+    if [ x"$springProfilesActive" == "" ]; then
+        springProfilesActive=localk8s
+    fi
 
-    # sample: "8080\t8081\t/actuator/health/readiness"
-    echo "$httpPort	$actuatorPort	$actuatorReadinessPath"
+    # sample: "8080\t8081\t/actuator/health/readiness\tlocalk8s"
+    echo "$httpPort	$actuatorPort	$actuatorReadinessPath	$springProfilesActive"
 }
 
 function gen_jdk_containerfile() {
@@ -303,6 +307,7 @@ ldev:
 #    httpPort: 8080
 #    actuatorPort: 8081
 #    actuatorReadinessPath: /actuator/health/readiness
+#    springProfilesActive: localk8s  # requires ./src/main/resources/application-localk8s.yml
 EOF
     fi
 }
@@ -377,6 +382,7 @@ EOF
 	httpPort=$(echo -n "$javaConfig" | cut -f 1)
 	actuatorPort=$(echo -n "$javaConfig" | cut -f 2)
 	actuatorReadinessPath=$(echo -n "$javaConfig" | cut -f 3)
+	springProfilesActive=$(echo -n "$javaConfig" | cut -f 4)
         cat <<EOF > ./kustomization/base/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -425,6 +431,8 @@ EOF
           env:
             - name: app
               value: $app
+            - name: SPRING_PROFILES_ACTIVE
+              value: $springProfilesActive
             - name: HOST_IP
               valueFrom:
                 fieldRef:
