@@ -17,6 +17,7 @@ pgsql="infra-pgsql@15.1.0"
 redis="infra-redis-cluster"
 mongo="infra-mongodb@7.0.5"
 ollama="ai-ollama"
+apollo="infra-apollo-server"
 
 function help() {
     cat <<EOF
@@ -55,6 +56,12 @@ Arguments:"
 │  ├─ up....start mongodb
 │  ├─ down..stop mongodb
 │  └─ cli...invoke mongodb cli
+├─ apollo...get/up/down for apollo
+│  ├─ get...get info of apollo
+│  ├─ up....start apollo
+│  ├─ down..stop apollo
+│  ├─ web...open web of apollo
+│  └─ test..test apollo
 ├─ ollama...get/up/down for ollama
 │  ├─ get...get info of ollama
 │  ├─ up....start ollama
@@ -187,6 +194,32 @@ function mongo_down() {
 function mongo_cli() {
     bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$mongo" && make cli
+}
+function apollo_get() {
+    bootstrap
+    cd "$ldevRoot"/"$k8sProj"/"$apollo"-db && make get
+    cd "$ldevRoot"/"$k8sProj"/"$apollo" && make get
+}
+function apollo_up() {
+    bootstrap
+    cd "$ldevRoot"/"$k8sProj"/"$apollo"-db && make build up get wait
+    cd "$ldevRoot"/"$k8sProj"/"$apollo" && make img local wait test
+}
+function apollo_down() {
+    bootstrap
+    cd "$ldevRoot"/"$k8sProj"/"$apollo" && make down
+    cd "$ldevRoot"/"$k8sProj"/"$apollo"-db && make down
+}
+function apollo_web() {
+    bootstrap
+    url="http://apollo.local/"
+    echo "$url"
+    echo "# remember to add this host into /etc/hosts"
+    open "$url"
+}
+function apollo_test() {
+    bootstrap
+    cd "$ldevRoot"/"$k8sProj"/"$apollo" && make test
 }
 function ollama_get() {
     bootstrap
@@ -747,6 +780,20 @@ elif [ "$1" == "mongo" ]; then
         mongo_down
     elif [ "$2" == "cli" ]; then
         mongo_cli
+    else
+        help
+    fi
+elif [ "$1" == "apollo" ]; then
+    if [ "$2" == "get" ]; then
+        apollo_get
+    elif [ "$2" == "up" ]; then
+        apollo_up
+    elif [ "$2" == "down" ]; then
+        apollo_down
+    elif [ "$2" == "web" ]; then
+        apollo_web
+    elif [ "$2" == "test" ]; then
+        apollo_test
     else
         help
     fi
