@@ -4,9 +4,11 @@
 
 if [ "$(which yq)" == "" ]; then
     echo >&2 "WARN: yq command is missing, please install with 'pip3 isntall yq'."
+    exit 1
 fi
 if [ "$(which kubectl)" == "" ]; then
-    echo >&2 "WARN: kubectl command is missing, please install it accordingly."
+    echo >&2 "WARN: kubectl command is missing, please install it accordingly. (mac: brew install kubectl)"
+    exit 1
 fi
 
 ldevRoot="$HOME/.ldev"
