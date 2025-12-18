@@ -95,6 +95,10 @@ function bootstrap() {
 }
 
 function k8s_get() {
+    if [ "$(uname -s)" == "Darwin" ]; then
+        echo "# colima list"
+        colima list
+    fi
     echo "# kubectl get node -o wide"
     kubectl get node -o wide
     echo ""
