@@ -104,14 +104,12 @@ function k8s_get() {
 
 function k8s_up() {
     bootstrap
-    echo >&2 "ERR: Not yet implemented."
-    exit 1
+    cd "$ldevRoot"/"$k8sProj" && make -s k8s-redo
 }
 
 function k8s_down() {
     bootstrap
-    echo >&2 "ERR: Not yet implemented."
-    exit 1
+    cd "$ldevRoot"/"$k8sProj" && make -s k8s-down
 }
 
 function k8s_redo() {
