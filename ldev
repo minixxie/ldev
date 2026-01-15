@@ -28,10 +28,11 @@ Arguments:"
 │  └─ gpu...show help message for argument 'gpu'
 ├─ install..download & install the 'ldev' script, upgrade if already exists
 ├─ k8s......get/up/down for k8s with colima/k3s
-│  ├─ get...get info of k8s
-│  ├─ up....start k8s
-│  ├─ down..stop k8s
-│  └─ redo..recreate k8s
+│  ├─ get......get info of k8s
+│  ├─ up.......start k8s
+│  ├─ down.....stop k8s
+│  ├─ restart..restart k8s
+│  └─ redo.....recreate k8s
 ├─ gpu......get/up/down for nvidia gpu operator
 │  ├─ get...get info of nvidia gpu operator
 │  ├─ up....start nvidia gpu operator
@@ -115,6 +116,14 @@ function k8s_up() {
 function k8s_down() {
     bootstrap
     cd "$ldevRoot"/"$k8sProj" && make -s k8s-down
+}
+
+function k8s_restart() {
+    if [ "$(uname -s)" == "Darwin" ]; then
+	    limactl restart ldev
+    else
+	    sudo systemctl restart k3s
+    fi
 }
 
 function k8s_redo() {
@@ -722,6 +731,8 @@ elif [ "$1" == "k8s" ]; then
         k8s_up
     elif [ "$2" == "down" ]; then
         k8s_down
+    elif [ "$2" == "restart" ]; then
+        k8s_restart
     elif [ "$2" == "redo" ]; then
         k8s_redo
     else
