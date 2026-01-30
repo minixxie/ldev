@@ -18,6 +18,7 @@ redis="infra-redis-cluster"
 mongo="infra-mongodb@7.0.5"
 ollama="ai-ollama"
 apollo="infra-apollo-server"
+minio="infra-minio@7.1.1"
 
 function help() {
     cat <<EOF
@@ -63,6 +64,12 @@ Arguments:"
 │  ├─ down..stop apollo
 │  ├─ web...open web of apollo
 │  └─ test..test apollo
+├─ minio....get/up/down for MinIO
+│  ├─ get...get info of MinIO
+│  ├─ up....start MinIO
+│  ├─ down..stop MinIO
+│  ├─ web...open web of MinIO console
+│  └─ test..test MinIO
 ├─ ollama...get/up/down for ollama
 │  ├─ get...get info of ollama
 │  ├─ up....start ollama
@@ -232,6 +239,31 @@ function apollo_web() {
 function apollo_test() {
     bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$apollo" && make test
+}
+function minio_get() {
+    bootstrap
+    cd "$ldevRoot"/"$k8sProj"/"$minio" && make get
+}
+function minio_up() {
+    bootstrap
+    cd "$ldevRoot"/"$k8sProj"/"$minio" && make img local wait test
+}
+function minio_down() {
+    bootstrap
+    cd "$ldevRoot"/"$k8sProj"/"$minio" && make down
+}
+function minio_web() {
+    bootstrap
+    echo "http://minio.minio.local/"
+    echo "user: AK_LOCAL"
+    echo "pass: SK_LOCAL"
+    echo "s3 endpoint: http://s3.minio.local/"
+    echo "# remember to add these hosts into /etc/hosts"
+    open "http://minio.minio.local/"
+}
+function minio_test() {
+    bootstrap
+    cd "$ldevRoot"/"$k8sProj"/"$minio" && make test
 }
 function ollama_get() {
     bootstrap
@@ -808,6 +840,20 @@ elif [ "$1" == "apollo" ]; then
         apollo_web
     elif [ "$2" == "test" ]; then
         apollo_test
+    else
+        help
+    fi
+elif [ "$1" == "minio" ]; then
+    if [ "$2" == "get" ]; then
+        minio_get
+    elif [ "$2" == "up" ]; then
+        minio_up
+    elif [ "$2" == "down" ]; then
+        minio_down
+    elif [ "$2" == "web" ]; then
+        minio_web
+    elif [ "$2" == "test" ]; then
+        minio_test
     else
         help
     fi
