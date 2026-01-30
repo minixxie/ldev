@@ -24,7 +24,9 @@ ldev help  # prints out how to use
 4. pgsql
 5. redis
 6. mongo
-7. ollama
+7. apollo
+8. minio
+9. ollama
 
 ## MySQL
 ```BASH
