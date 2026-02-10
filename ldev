@@ -254,12 +254,12 @@ function minio_down() {
 }
 function minio_web() {
     bootstrap
-    echo "http://minio.minio.local/"
+    echo "http://minio.local/"
     echo "user: AK_LOCAL"
     echo "pass: SK_LOCAL"
     echo "s3 endpoint: http://s3.minio.local/"
     echo "# remember to add these hosts into /etc/hosts"
-    open "http://minio.minio.local/"
+    open "http://minio.local/"
 }
 function minio_test() {
     bootstrap
