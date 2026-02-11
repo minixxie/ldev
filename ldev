@@ -24,63 +24,67 @@ function help() {
     cat <<EOF
 Usage: $0 arg1 arg2 arg3 ...
 Arguments:"
-├─ help.....show this help message
-│  ├─ k8s...show help message for argument 'k8s'
-│  └─ gpu...show help message for argument 'gpu'
-├─ install..download & install the 'ldev' script, upgrade if already exists
-├─ k8s......get/up/down for k8s with colima/k3s
+├─ help........show this help message
+│  ├─ k8s......show help message for argument 'k8s'
+│  └─ gpu......show help message for argument 'gpu'
+├─ install.....download & install the 'ldev' script, upgrade if already exists
+├─ k8s.........get/up/down for k8s with colima/k3s
 │  ├─ get......get info of k8s
 │  ├─ up.......start k8s
 │  ├─ down.....stop k8s
 │  ├─ restart..restart k8s
 │  └─ redo.....recreate k8s
-├─ gpu......get/up/down for nvidia gpu operator
-│  ├─ get...get info of nvidia gpu operator
-│  ├─ up....start nvidia gpu operator
-│  └─ down..stop nvidia gpu operator
-├─ mysql....get/up/down for mysql
-│  ├─ get...get info of mysql
-│  ├─ up....start mysql
-│  ├─ down..stop mysql
-│  └─ cli...invoke mysql cli
-├─ pgsql....get/up/down for pgsql
-│  ├─ get...get info of pgsql
-│  ├─ up....start pgsql
-│  ├─ down..stop pgsql
-│  └─ cli...invoke pgsql cli
-├─ redis....get/up/down for redis-cluster
-│  ├─ get...get info of redis-cluster
-│  ├─ up....start redis-cluster
-│  ├─ down..stop redis-cluster
-│  └─ cli...invoke redis-cluster cli
-├─ mongo....get/up/down for mongodb
-│  ├─ get...get info of mongodb
-│  ├─ up....start mongodb
-│  ├─ down..stop mongodb
-│  └─ cli...invoke mongodb cli
-├─ apollo...get/up/down for apollo
-│  ├─ get...get info of apollo
-│  ├─ up....start apollo
-│  ├─ down..stop apollo
-│  ├─ web...open web of apollo
-│  └─ test..test apollo
-├─ minio....get/up/down for MinIO
-│  ├─ get...get info of MinIO
-│  ├─ up....start MinIO
-│  ├─ down..stop MinIO
-│  ├─ web...open web of MinIO console
-│  └─ test..test MinIO
-├─ ollama...get/up/down for ollama
-│  ├─ get...get info of ollama
-│  ├─ up....start ollama
-│  ├─ down..stop ollama
-│  └─ test..test ollama
-├─ init.....initialize ldev.yaml for the application in the current folder
-├─ get......get info for the application in the current folder (check for kustomization/ folder)
-├─ up.......start the application in the current folder (check for kustomization/ folder)
-├─ down.....stop the application in the current folder (check for kustomization/ folder)
-├─ logs.....tail the logs of the application in the current folder (check for kustomization/ folder)
-├─ exec.....exec shell into the pod of the application in the current folder
+├─ gpu.........get/up/down for nvidia gpu operator
+│  ├─ get......get info of nvidia gpu operator
+│  ├─ up.......start nvidia gpu operator
+│  └─ down.....stop nvidia gpu operator
+├─ mysql.......get/up/down for mysql
+│  ├─ get......get info of mysql
+│  ├─ up.......start mysql
+│  ├─ down.....stop mysql
+│  └─ cli......invoke mysql cli
+├─ pgsql.......get/up/down for pgsql
+│  ├─ get......get info of pgsql
+│  ├─ up.......start pgsql
+│  ├─ down.....stop pgsql
+│  └─ cli......invoke pgsql cli
+├─ redis.......get/up/down for redis-cluster
+│  ├─ get......get info of redis-cluster
+│  ├─ up.......start redis-cluster
+│  ├─ down.....stop redis-cluster
+│  └─ cli......invoke redis-cluster cli
+├─ mongo.......get/up/down for mongodb
+│  ├─ get......get info of mongodb
+│  ├─ up.......start mongodb
+│  ├─ down.....stop mongodb
+│  └─ cli......invoke mongodb cli
+├─ apollo......get/up/down for apollo
+│  ├─ get......get info of apollo
+│  ├─ up.......start apollo
+│  ├─ down.....stop apollo
+│  ├─ web......open web of apollo
+│  └─ test.....test apollo
+├─ minio.......get/up/down for MinIO
+│  ├─ get......get info of MinIO
+│  ├─ up.......start MinIO
+│  ├─ down.....stop MinIO
+│  ├─ web......open web of MinIO console
+│  └─ test.....test MinIO
+├─ ollama......get/up/down for ollama
+│  ├─ get......get info of ollama
+│  ├─ up.......start ollama
+│  ├─ down.....stop ollama
+│  └─ test.....test ollama
+├─ run.........run a pod on-demand
+│  ├─ ubuntu...run a pod with ubuntu image
+│  ├─ alpine...run a pod with alpine image
+│  └─ curl.....run a pod with curl image
+├─ init........initialize ldev.yaml for the application in the current folder
+├─ get.........get info for the application in the current folder (check for kustomization/ folder)
+├─ up..........start the application in the current folder (check for kustomization/ folder)
+├─ down........stop the application in the current folder (check for kustomization/ folder)
+├─ logs........tail the logs of the application in the current folder (check for kustomization/ folder)
+└─ exec........exec shell into the pod of the application in the current folder
 EOF
 }
 
@@ -280,6 +284,15 @@ function ollama_down() {
 function ollama_test() {
     bootstrap
     cd "$ldevRoot"/"$k8sProj"/"$ollama" && make test
+}
+function run_ubuntu() {
+    kubectl run ubuntu-$(date "+%s") --rm -it --restart=Never --image ubuntu --command -- bash
+}
+function run_alpine() {
+    kubectl run alpine-$(date "+%s") --rm -it --restart=Never --image alpine --command -- sh
+}
+function run_curl() {
+    kubectl run curl-$(date "+%s") --rm -it --restart=Never --image curlimages/curl --command -- sh
 }
 
 function yaml_read_app() {
@@ -866,6 +879,16 @@ elif [ "$1" == "ollama" ]; then
         ollama_down
     elif [ "$2" == "test" ]; then
         ollama_test
+    else
+        help
+    fi
+elif [ "$1" == "run" ]; then
+    if [ "$2" == "ubuntu" ]; then
+        run_ubuntu
+    elif [ "$2" == "alpine" ]; then
+        run_alpine
+    elif [ "$2" == "curl" ]; then
+        run_curl
     else
         help
     fi
