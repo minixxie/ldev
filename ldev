@@ -28,6 +28,8 @@ Arguments:"
 │  ├─ k8s......show help message for argument 'k8s'
 │  └─ gpu......show help message for argument 'gpu'
 ├─ install.....download & install the 'ldev' script, upgrade if already exists
+├─ vm..........control vm (only applicable for mac os)
+│  └─ fixtime..fix the time lag of the vm
 ├─ k8s.........get/up/down for k8s with colima/k3s
 │  ├─ get......get info of k8s
 │  ├─ up.......start k8s
@@ -104,6 +106,17 @@ function bootstrap() {
         cd "$ldevRoot" && git clone --depth 1 https://github.com/minixxie/k8s-services.git > /dev/null
     fi
     cd "$ldevRoot"/"$k8sProj" && git pull --rebase > /dev/null
+}
+
+function vm_fixtime() {
+    tz=$(readlink /etc/localtime | sed 's#/var/db/timezone/zoneinfo/##g')
+    echo "[Before fix]"
+    echo "Host: "$(TZ=$tz date '+%Y-%m-%d %H:%M:%S')
+    echo "VM:   "$(TZ=$tz limactl shell ldev date '+%Y-%m-%d %H:%M:%S')
+    limactl shell ldev sudo date -s "$(date '+%Y-%m-%d %H:M:%S')"
+    echo "[After fix]"
+    echo "Host: "$(TZ=$tz date '+%Y-%m-%d %H:%M:%S')
+    echo "VM:   "$(TZ=$tz limactl shell ldev date '+%Y-%m-%d %H:%M:%S')
 }
 
 function k8s_get() {
@@ -769,6 +782,12 @@ elif [ "$1" == "help" ]; then
     fi
 elif [ "$1" == "install" ]; then
     install
+elif [ "$1" == "vm" ]; then
+    if [ "$2" == "fixtime" ]; then
+        vm_fixtime
+    else
+        help
+    fi
 elif [ "$1" == "k8s" ]; then
     if [ "$2" == "get" ]; then
         k8s_get
@@ -782,7 +801,6 @@ elif [ "$1" == "k8s" ]; then
         k8s_redo
     else
         help
-	exit 1
     fi
 elif [ "$1" == "gpu" ]; then
     if [ "$2" == "get" ]; then
