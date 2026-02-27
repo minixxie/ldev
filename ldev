@@ -111,12 +111,12 @@ function bootstrap() {
 function vm_fixtime() {
     tz=$(readlink /etc/localtime | sed 's#/var/db/timezone/zoneinfo/##g')
     echo "[Before fix]"
-    echo "Host: "$(TZ=$tz date '+%Y-%m-%d %H:%M:%S')
-    echo "VM:   "$(TZ=$tz limactl shell ldev date '+%Y-%m-%d %H:%M:%S')
-    limactl shell ldev sudo date -s "$(date '+%Y-%m-%d %H:%M:%S')"
+    echo "Host: "$(TZ=$tz date '+%Y-%m-%d %H:%M:%S %Z')
+    echo "VM:   "$(TZ=$tz limactl shell ldev date '+%Y-%m-%d %H:%M:%S %Z')
+    limactl shell ldev sudo date -s "$(TZ=$tz date '+%Y-%m-%d %H:%M:%S')"
     echo "[After fix]"
-    echo "Host: "$(TZ=$tz date '+%Y-%m-%d %H:%M:%S')
-    echo "VM:   "$(TZ=$tz limactl shell ldev date '+%Y-%m-%d %H:%M:%S')
+    echo "Host: "$(TZ=$tz date '+%Y-%m-%d %H:%M:%S %Z')
+    echo "VM:   "$(TZ=$tz limactl shell ldev date '+%Y-%m-%d %H:%M:%S %Z')
 }
 
 function k8s_get() {
