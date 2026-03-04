@@ -29,7 +29,8 @@ Arguments:"
 │  └─ gpu......show help message for argument 'gpu'
 ├─ install.....download & install the 'ldev' script, upgrade if already exists
 ├─ vm..........control vm (only applicable for mac os)
-│  └─ fixtime..fix the time lag of the vm
+│  ├─ restart..restart the lima VM
+│  └─ fixtime..fix the time lag of the VM
 ├─ k8s.........get/up/down for k8s with colima/k3s
 │  ├─ get......get info of k8s
 │  ├─ up.......start k8s
@@ -117,6 +118,9 @@ function vm_fixtime() {
     echo "[After fix]"
     echo "Host: "$(TZ=$tz date '+%Y-%m-%d %H:%M:%S %Z')
     echo "VM:   "$(TZ=$tz limactl shell ldev date '+%Y-%m-%d %H:%M:%S %Z')
+}
+function vm_restart() {
+    limactl restart ldev
 }
 
 function k8s_get() {
@@ -783,7 +787,9 @@ elif [ "$1" == "help" ]; then
 elif [ "$1" == "install" ]; then
     install
 elif [ "$1" == "vm" ]; then
-    if [ "$2" == "fixtime" ]; then
+    if [ "$2" == "restart" ]; then
+        vm_restart
+    elif [ "$2" == "fixtime" ]; then
         vm_fixtime
     else
         help
