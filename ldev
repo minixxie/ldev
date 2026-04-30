@@ -87,7 +87,8 @@ Arguments:"
 ├─ up..........start the application in the current folder (check for kustomization/ folder)
 ├─ down........stop the application in the current folder (check for kustomization/ folder)
 ├─ logs........tail the logs of the application in the current folder (check for kustomization/ folder)
-└─ exec........exec shell into the pod of the application in the current folder
+├─ exec........exec shell into the pod of the application in the current folder
+└─ top.........display resource (CPU/memory) usage of the pod of the application in the current folder
 EOF
 }
 
@@ -774,6 +775,10 @@ function pod_shell() {
     ns=$(yaml_read_ns)
     kubectl -n "$ns" exec -it $(kubectl -n "$ns" get pod | sed 1d | awk '{print $1}') -- sh -c 'bash || sh'
 }
+function pod_top() {
+    ns=$(yaml_read_ns)
+    kubectl -n "$ns" top pod $(kubectl -n "$ns" get pod | sed 1d | awk '{print $1}')
+}
 
 if [ "$1" == "" ]; then
     help
@@ -930,6 +935,8 @@ elif [ "$1" == "logs" ]; then
     logs 
 elif [ "$1" == "exec" ]; then
     pod_shell
+elif [ "$1" == "top" ]; then
+    pod_top
 else
     help
     exit 1
