@@ -88,7 +88,8 @@ Arguments:"
 ├─ down........stop the application in the current folder (check for kustomization/ folder)
 ├─ logs........tail the logs of the application in the current folder (check for kustomization/ folder)
 ├─ exec........exec shell into the pod of the application in the current folder
-└─ top.........display resource (CPU/memory) usage of the pod of the application in the current folder
+├─ top.........display resource (CPU/memory) usage of the pod of the application in the current folder
+└─ http........call HTTP API with a *.http file as argument (e.g. ldev http get_user.http)
 EOF
 }
 
@@ -779,6 +780,60 @@ function pod_top() {
     ns=$(yaml_read_ns)
     kubectl -n "$ns" top pod $(kubectl -n "$ns" get pod | sed 1d | awk '{print $1}')
 }
+function call_http() {
+    bodyJson=`cat "$1"`
+
+    emptyLineNum=$(echo -n "$bodyJson" | grep -E --line-number '^$' | head -n 1 | cut -f 1 -d ':')
+
+    firstLine=$(echo -n "$bodyJson" | head -n 1)
+    verb=$(echo -n "$firstLine" | cut -f 1 -d ' ')
+    url=$(echo -n "$firstLine" | cut -f 2 -d ' ')
+
+    tmpfile=$(mktemp /tmp/XXXXXX)
+    function cleanup {
+       rm -f "$tmpfile"
+    }
+    trap cleanup EXIT
+
+    headers=""
+    contentRemoveFirstLine=$(echo -n "$bodyJson" | tail -n +2)
+    if [ "$emptyLineNum" != "" ]; then
+        # has empty line
+        headerLines=$(echo -n "$bodyJson" | head -n $(expr $emptyLineNum - 1) | tail -n +2 | sed '/^\s*$/d')
+        headers=$(echo -n "$headerLines" | sed "s/^/-H '/" | sed "s/\$/'/" | tr '\012' ' ')
+        echo -n "$bodyJson" | tail -n +$(expr $emptyLineNum + 1) > "$tmpfile"
+    else
+        # has NO empty line
+        headerLines=$(echo -n "$contentRemoveFirstLine" | sed '/^\s*$/d')
+        headers=$(echo -n "$headerLines" | sed "s/^/-H '/" | sed "s/\$/'/" | tr '\012' ' ')
+        echo -n "" > "$tmpfile" # empty body
+    fi
+    if [ "$LOAD_TEST" == 1 ]; then
+        if [ "$TOTAL_REQS" == "" ]; then
+            TOTAL_REQS=1000
+        fi
+        if [ "$CONCURRENCY" == "" ]; then
+            CONCURRENCY=10
+        fi
+        if [ "$verb" == "GET" ]; then
+            echo "$headers $url" | xargs ab -n "$TOTAL_REQS" -c "$CONCURRENCY" -m "$verb"
+        else
+            echo "$headers $url" | xargs ab -n "$TOTAL_REQS" -c "$CONCURRENCY" -p "$tmpfile"
+        fi
+    else
+        stdout=$(echo "$headers" | xargs curl -v -w "\nHTTP %{http_code} time:%{time_total}s\n" -X $verb "$url" -d @"$tmpfile")
+        j=$(echo "$stdout"|tail -n2|head -n1)
+        s=$(echo "$stdout"|tail -n1);
+        #o=$(echo "$stdout"|head -n +2);
+        json=$(echo "$j"|python -m json.tool 2>/dev/null)
+        if [ $? -ne 0 ]; then
+            echo "$stdout"
+        else
+            echo "$json"
+            echo "$s"
+        fi
+    fi
+}
 
 if [ "$1" == "" ]; then
     help
@@ -937,6 +992,8 @@ elif [ "$1" == "exec" ]; then
     pod_shell
 elif [ "$1" == "top" ]; then
     pod_top
+elif [ "$1" == "http" ]; then
+    call_http "$2"
 else
     help
     exit 1
