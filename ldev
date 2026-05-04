@@ -321,11 +321,13 @@ function run_curl() {
 
 function golang_sh() {
     nerdctl run --rm -it -v \
+        --namespace=k8s.io \
 	"$(pwd):/go/src/app" -w "/go/src/app" \
         "$golangImg" bash
 }
 function golang_fmt() {
     nerdctl run --rm -t -v \
+        --namespace=k8s.io \
 	"$(pwd):/go/src/app" -w "/go/src/app" \
         "$golangImg" gofmt -w .
 }
