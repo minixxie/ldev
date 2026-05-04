@@ -20,6 +20,8 @@ ollama="ai-ollama"
 apollo="infra-apollo-server"
 minio="infra-minio"
 
+golangImg=minixxie/golang:1.21.0
+
 function help() {
     cat <<EOF
 Usage: $0 arg1 arg2 arg3 ...
@@ -82,6 +84,9 @@ Arguments:"
 │  ├─ ubuntu...run a pod with ubuntu image
 │  ├─ alpine...run a pod with alpine image
 │  └─ curl.....run a pod with curl image
+├─ golang......development commands related to golang
+│  ├─ sh.......run a container shell with mounted current working directory
+│  └─ fmt......run a container shell to gofmt the code
 ├─ init........initialize ldev.yaml for the application in the current folder
 ├─ get.........get info for the application in the current folder (check for kustomization/ folder)
 ├─ up..........start the application in the current folder (check for kustomization/ folder)
@@ -312,6 +317,17 @@ function run_alpine() {
 }
 function run_curl() {
     kubectl run curl-$(date "+%s") --rm -it --restart=Never --image curlimages/curl --command -- sh
+}
+
+function golang_sh() {
+    nerdctl run --rm -it -v \
+	"$(pwd):/go/src/app" -w "/go/src/app" \
+        "$golangImg" bash
+}
+function golang_fmt() {
+    nerdctl run --rm -t -v \
+	"$(pwd):/go/src/app" -w "/go/src/app" \
+        "$golangImg" gofmt -w .
 }
 
 function yaml_read_app() {
@@ -973,6 +989,14 @@ elif [ "$1" == "run" ]; then
         run_alpine
     elif [ "$2" == "curl" ]; then
         run_curl
+    else
+        help
+    fi
+elif [ "$1" == "golang" ]; then
+    if [ "$2" == "sh" ]; then
+        golang_sh
+    elif [ "$2" == "fmt" ]; then
+        golang_fmt
     else
         help
     fi
