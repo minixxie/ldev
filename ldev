@@ -20,7 +20,7 @@ ollama="ai-ollama"
 apollo="infra-apollo-server"
 minio="infra-minio"
 
-golangImg=minixxie/golang:1.21.0
+golangImg=minixxie/golang:1.26.2
 
 function help() {
     cat <<EOF
