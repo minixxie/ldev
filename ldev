@@ -326,7 +326,7 @@ function golang_sh() {
     echo "/scripts/ci/api-linter.sh           # check if the API design has any problem (run in the project root)"
     echo "gofmt -w .                          # format the source code (run in the project root)"
     echo 'ls $GOPATH                          # check files in the GOPATH'
-    echo 'callapi.sh < xxx.http               # use curl to make an API call (load from xxx.http)"
+    echo "callapi.sh < xxx.http               # use curl to make an API call (load from xxx.http)"
     nerdctl --namespace=k8s.io run --rm -it -v \
 	"$(pwd):/go/src/app" -w "/go/src/app" \
         "$golangImg" bash
