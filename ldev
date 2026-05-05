@@ -30,64 +30,20 @@ Arguments:"
 │  ├─ k8s.........show help message for argument 'k8s'
 │  └─ gpu.........show help message for argument 'gpu'
 ├─ install........download & install the 'ldev' script, upgrade if already exists
-├─ vm.............control vm (only applicable for mac os)
-│  ├─ restart.....restart the lima VM
-│  └─ fixtime.....fix the time lag of the VM
-├─ k8s............get/up/down for k8s with colima/k3s
-│  ├─ get.........get info of k8s
-│  ├─ up..........start k8s
-│  ├─ down........stop k8s
-│  ├─ restart.....restart k8s
-│  └─ redo........recreate k8s
-├─ gpu............get/up/down for nvidia gpu operator
-│  ├─ get.........get info of nvidia gpu operator
-│  ├─ up..........start nvidia gpu operator
-│  └─ down........stop nvidia gpu operator
-├─ mysql..........get/up/down for mysql
-│  ├─ get.........get info of mysql
-│  ├─ up..........start mysql
-│  ├─ down........stop mysql
-│  └─ cli.........invoke mysql cli
-├─ pgsql..........get/up/down for pgsql
-│  ├─ get.........get info of pgsql
-│  ├─ up..........start pgsql
-│  ├─ down........stop pgsql
-│  └─ cli.........invoke pgsql cli
-├─ redis..........get/up/down for redis-cluster
-│  ├─ get.........get info of redis-cluster
-│  ├─ up..........start redis-cluster
-│  ├─ down........stop redis-cluster
-│  └─ cli.........invoke redis-cluster cli
-├─ mongo..........get/up/down for mongodb
-│  ├─ get.........get info of mongodb
-│  ├─ up..........start mongodb
-│  ├─ down........stop mongodb
-│  └─ cli.........invoke mongodb cli
-├─ apollo.........get/up/down for apollo
-│  ├─ get.........get info of apollo
-│  ├─ up..........start apollo
-│  ├─ down........stop apollo
-│  ├─ web.........open web of apollo
-│  └─ test........test apollo
-├─ minio..........get/up/down for MinIO
-│  ├─ get.........get info of MinIO
-│  ├─ up..........start MinIO
-│  ├─ down........stop MinIO
-│  ├─ web.........open web of MinIO console
-│  └─ test........test MinIO
-├─ ollama.........get/up/down for ollama
-│  ├─ get.........get info of ollama
-│  ├─ up..........start ollama
-│  ├─ down........stop ollama
-│  └─ test........test ollama
-├─ run............run a pod on-demand
-│  ├─ ubuntu......run a pod with ubuntu image
-│  ├─ alpine......run a pod with alpine image
-│  └─ curl........run a pod with curl image
-├─ golang.........development commands related to golang
-│  ├─ sh..........run a container shell with mounted current working directory
-│  ├─ api-linter..run a container shell to check api issue
-│  └─ fmt.........run a container shell to gofmt the code
+EOF
+	help_vm
+	help_k8s
+	help_gpu
+	help_mysql
+	help_pgsql
+	help_redis
+	help_mongo
+	help_apollo
+	help_minio
+	help_ollama
+	help_run
+	help_golang
+	cat <<EOF
 ├─ init...........initialize ldev.yaml for the application in the current folder
 ├─ get............get info for the application in the current folder (check for kustomization/ folder)
 ├─ up.............start the application in the current folder (check for kustomization/ folder)
@@ -96,6 +52,112 @@ Arguments:"
 ├─ exec...........exec shell into the pod of the application in the current folder
 ├─ top............display resource (CPU/memory) usage of the pod of the application in the current folder
 └─ http...........call HTTP API with a *.http file as argument (e.g. ldev http get_user.http)
+EOF
+}
+function help_vm() {
+	cat <<EOF
+├─ vm.............control vm (only applicable for mac os)
+│  ├─ restart.....restart the lima VM
+│  └─ fixtime.....fix the time lag of the VM
+EOF
+}
+function help_k8s() {
+	cat <<EOF
+├─ k8s............get/up/down for k8s with colima/k3s
+│  ├─ get.........get info of k8s
+│  ├─ up..........start k8s
+│  ├─ down........stop k8s
+│  ├─ restart.....restart k8s
+│  └─ redo........recreate k8s
+EOF
+}
+function help_gpu() {
+	cat <<EOF
+├─ gpu............get/up/down for nvidia gpu operator
+│  ├─ get.........get info of nvidia gpu operator
+│  ├─ up..........start nvidia gpu operator
+│  └─ down........stop nvidia gpu operator
+EOF
+}
+function help_mysql() {
+	cat <<EOF
+├─ mysql..........get/up/down for mysql
+│  ├─ get.........get info of mysql
+│  ├─ up..........start mysql
+│  ├─ down........stop mysql
+│  └─ cli.........invoke mysql cli
+EOF
+}
+function help_pgsql() {
+	cat <<EOF
+├─ pgsql..........get/up/down for pgsql
+│  ├─ get.........get info of pgsql
+│  ├─ up..........start pgsql
+│  ├─ down........stop pgsql
+│  └─ cli.........invoke pgsql cli
+EOF
+}
+function help_redis() {
+	cat <<EOF
+├─ redis..........get/up/down for redis-cluster
+│  ├─ get.........get info of redis-cluster
+│  ├─ up..........start redis-cluster
+│  ├─ down........stop redis-cluster
+│  └─ cli.........invoke redis-cluster cli
+EOF
+}
+function help_mongo() {
+	cat <<EOF
+├─ mongo..........get/up/down for mongodb
+│  ├─ get.........get info of mongodb
+│  ├─ up..........start mongodb
+│  ├─ down........stop mongodb
+│  └─ cli.........invoke mongodb cli
+EOF
+}
+function help_apollo() {
+	cat <<EOF
+├─ apollo.........get/up/down for apollo
+│  ├─ get.........get info of apollo
+│  ├─ up..........start apollo
+│  ├─ down........stop apollo
+│  ├─ web.........open web of apollo
+│  └─ test........test apollo
+EOF
+}
+function help_minio() {
+	cat <<EOF
+├─ minio..........get/up/down for MinIO
+│  ├─ get.........get info of MinIO
+│  ├─ up..........start MinIO
+│  ├─ down........stop MinIO
+│  ├─ web.........open web of MinIO console
+│  └─ test........test MinIO
+EOF
+}
+function help_ollama() {
+	cat <<EOF
+├─ ollama.........get/up/down for ollama
+│  ├─ get.........get info of ollama
+│  ├─ up..........start ollama
+│  ├─ down........stop ollama
+│  └─ test........test ollama
+EOF
+}
+function help_run() {
+	cat <<EOF
+├─ run............run a pod on-demand
+│  ├─ ubuntu......run a pod with ubuntu image
+│  ├─ alpine......run a pod with alpine image
+│  └─ curl........run a pod with curl image
+EOF
+}
+function help_golang() {
+	cat <<EOF
+├─ golang.........development commands related to golang
+│  ├─ sh..........run a container shell with mounted current working directory
+│  ├─ api-linter..run a container shell to check api issue
+│  └─ fmt.........run a container shell to gofmt the code
 EOF
 }
 
@@ -888,7 +950,7 @@ elif [ "$1" == "vm" ]; then
     elif [ "$2" == "fixtime" ]; then
         vm_fixtime
     else
-        help
+        help_vm
     fi
 elif [ "$1" == "k8s" ]; then
     if [ "$2" == "get" ]; then
@@ -902,7 +964,7 @@ elif [ "$1" == "k8s" ]; then
     elif [ "$2" == "redo" ]; then
         k8s_redo
     else
-        help
+        help_k8s
     fi
 elif [ "$1" == "gpu" ]; then
     if [ "$2" == "get" ]; then
@@ -912,7 +974,7 @@ elif [ "$1" == "gpu" ]; then
     elif [ "$2" == "down" ]; then
         gpu_down
     else
-        help
+        help_gpu
     fi
 elif [ "$1" == "mysql" ]; then
     if [ "$2" == "get" ]; then
@@ -924,7 +986,7 @@ elif [ "$1" == "mysql" ]; then
     elif [ "$2" == "cli" ]; then
         mysql_cli
     else
-        help
+        help_mysql
     fi
 elif [ "$1" == "pgsql" ]; then
     if [ "$2" == "get" ]; then
@@ -936,7 +998,7 @@ elif [ "$1" == "pgsql" ]; then
     elif [ "$2" == "cli" ]; then
         pgsql_cli
     else
-        help
+        help_pgsql
     fi
 elif [ "$1" == "redis" ]; then
     if [ "$2" == "get" ]; then
@@ -948,7 +1010,7 @@ elif [ "$1" == "redis" ]; then
     elif [ "$2" == "cli" ]; then
         redis_cli
     else
-        help
+        help_redis
     fi
 elif [ "$1" == "mongo" ]; then
     if [ "$2" == "get" ]; then
@@ -960,7 +1022,7 @@ elif [ "$1" == "mongo" ]; then
     elif [ "$2" == "cli" ]; then
         mongo_cli
     else
-        help
+        help_mongo
     fi
 elif [ "$1" == "apollo" ]; then
     if [ "$2" == "get" ]; then
@@ -974,7 +1036,7 @@ elif [ "$1" == "apollo" ]; then
     elif [ "$2" == "test" ]; then
         apollo_test
     else
-        help
+        help_apollo
     fi
 elif [ "$1" == "minio" ]; then
     if [ "$2" == "get" ]; then
@@ -988,7 +1050,7 @@ elif [ "$1" == "minio" ]; then
     elif [ "$2" == "test" ]; then
         minio_test
     else
-        help
+        help_minio
     fi
 elif [ "$1" == "ollama" ]; then
     if [ "$2" == "get" ]; then
@@ -1000,7 +1062,7 @@ elif [ "$1" == "ollama" ]; then
     elif [ "$2" == "test" ]; then
         ollama_test
     else
-        help
+        help_ollama
     fi
 elif [ "$1" == "run" ]; then
     if [ "$2" == "ubuntu" ]; then
@@ -1010,7 +1072,7 @@ elif [ "$1" == "run" ]; then
     elif [ "$2" == "curl" ]; then
         run_curl
     else
-        help
+        help_run
     fi
 elif [ "$1" == "golang" ]; then
     if [ "$2" == "sh" ]; then
@@ -1020,7 +1082,7 @@ elif [ "$1" == "golang" ]; then
     elif [ "$2" == "fmt" ]; then
         golang_fmt
     else
-        help
+        help_golang
     fi
 elif [ "$1" == "init" ]; then
     init
