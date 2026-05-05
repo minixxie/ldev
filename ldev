@@ -156,7 +156,8 @@ function help_golang() {
 	cat <<EOF
 ├─ golang.........development commands related to golang
 │  ├─ sh..........run a container shell with mounted current working directory
-│  ├─ pb..........run a container shell to run "buf generate"
+│  ├─ buf.........run a container shell to run "buf generate"
+│  ├─ buf-up......run a container shell to run "buf dep update"
 │  ├─ api-linter..run a container shell to check api issue
 │  └─ fmt.........run a container shell to gofmt the code
 EOF
@@ -399,12 +400,19 @@ function golang_sh() {
 	"$(pwd):/go/src/$app" -w "/go/src/$app" \
         "$golangImg" bash
 }
-function golang_pb() {
+function golang_buf() {
     app=$(yaml_read_app)
     nerdctl --namespace=k8s.io run --rm -t -v \
 	"$(pwd):/go/src/$app" -w "/go/src/$app" \
         "$golangImg" bash -c \
 	"install-protoc-plugins.sh && go mod download && buf generate"
+}
+function golang_buf_up() {
+    app=$(yaml_read_app)
+    nerdctl --namespace=k8s.io run --rm -t -v \
+	"$(pwd):/go/src/$app" -w "/go/src/$app" \
+        "$golangImg" bash -c \
+	"install-protoc-plugins.sh && go mod download && buf dep update"
 }
 function golang_api_linter() {
     app=$(yaml_read_app)
@@ -1085,8 +1093,10 @@ elif [ "$1" == "run" ]; then
 elif [ "$1" == "golang" ]; then
     if [ "$2" == "sh" ]; then
         golang_sh
-    elif [ "$2" == "pb" ]; then
-        golang_pb
+    elif [ "$2" == "buf" ]; then
+        golang_buf
+    elif [ "$2" == "buf-up" ]; then
+        golang_buf_up
     elif [ "$2" == "api-linter" ]; then
         golang_api_linter
     elif [ "$2" == "fmt" ]; then
