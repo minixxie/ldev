@@ -321,6 +321,7 @@ function run_curl() {
 }
 
 function golang_sh() {
+    app=$(basename $(pwd))
     echo "Reminded these commands are available:"
     echo "install-protoc-plugins.sh  # Step 1: install protoc plugin (run in the project root)"
     echo "go mod download            # Step 2: download all vendor files (run in the project root)"
@@ -332,18 +333,20 @@ function golang_sh() {
     echo 'ls $GOPATH                 # check files in the GOPATH'
     echo "callapi.sh < xxx.http      # use curl to make an API call (load from xxx.http)"
     nerdctl --namespace=k8s.io run --rm -it -v \
-	"$(pwd):/go/src/app" -w "/go/src/app" \
+	"$(pwd):/usr/local/go/src/$app" -w "/usr/local/go/src/$app" \
         "$golangImg" bash
 }
 function golang_api_linter() {
+    app=$(basename $(pwd))
     nerdctl --namespace=k8s.io run --rm -t -v \
-	"$(pwd):/go/src/app" -w "/go/src/app" \
+	"$(pwd):/usr/local/go/src/$app" -w "/usr/local/go/src/$app" \
         "$golangImg" bash -c \
 	"install-protoc-plugins.sh && go mod download && buf generate && api-linter.sh"
 }
 function golang_fmt() {
+    app=$(basename $(pwd))
     nerdctl --namespace=k8s.io run --rm -t -v \
-	"$(pwd):/go/src/app" -w "/go/src/app" \
+	"$(pwd):/usr/local/go/src/$app" -w "/usr/local/go/src/$app" \
         "$golangImg" gofmt -w .
 }
 
@@ -445,7 +448,7 @@ function gen_golang_containerfile() {
         httpPort=$(echo -n "$golangConfig" | cut -f 1)
         grpcPort=$(echo -n "$golangConfig" | cut -f 2)
         cat <<EOF > ./Containerfile
-FROM --platform=\$BUILDPLATFORM minixxie/golang:1.21.0 as golang
+FROM --platform=\$BUILDPLATFORM minixxie/golang:1.26.2 as golang
 
 ARG BUILDPLATFORM
 ARG APP
@@ -456,8 +459,7 @@ WORKDIR \$GOPATH/src/\${APP}
 #ADD ./micro ./micro
 COPY ./go.mod .
 COPY ./go.sum .
-ADD ./scripts ./scripts
-RUN ./scripts/install-protoc-plugins.sh
+RUN install-protoc-plugins.sh
 RUN go mod download
 
 ADD ./pb ./pb
@@ -465,9 +467,10 @@ ADD ./buf.yaml ./buf.yaml
 ADD ./buf.lock ./buf.lock
 ADD ./buf.gen.yaml ./buf.gen.yaml
 RUN buf generate
+RUN api-linter.sh
 
 ADD . .
-RUN ./scripts/build.sh
+RUN build.sh
 RUN cp ./bin/server /tmp/
 RUN cp ./bin/client /tmp/
 
