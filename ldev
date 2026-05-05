@@ -333,20 +333,20 @@ function golang_sh() {
     echo 'ls $GOPATH                 # check files in the GOPATH'
     echo "callapi.sh < xxx.http      # use curl to make an API call (load from xxx.http)"
     nerdctl --namespace=k8s.io run --rm -it -v \
-	"$(pwd):/usr/local/go/src/$app" -w "/usr/local/go/src/$app" \
+	"$(pwd):/go/src/$app" -w "/go/src/$app" \
         "$golangImg" bash
 }
 function golang_api_linter() {
     app=$(yaml_read_app)
     nerdctl --namespace=k8s.io run --rm -t -v \
-	"$(pwd):/usr/local/go/src/$app" -w "/usr/local/go/src/$app" \
+	"$(pwd):/go/src/$app" -w "/go/src/$app" \
         "$golangImg" bash -c \
 	"install-protoc-plugins.sh && go mod download && buf generate && api-linter.sh"
 }
 function golang_fmt() {
     app=$(yaml_read_app)
     nerdctl --namespace=k8s.io run --rm -t -v \
-	"$(pwd):/usr/local/go/src/$app" -w "/usr/local/go/src/$app" \
+	"$(pwd):/go/src/$app" -w "/go/src/$app" \
         "$golangImg" gofmt -w .
 }
 
@@ -453,7 +453,7 @@ FROM --platform=\$BUILDPLATFORM minixxie/golang:1.26.2 as golang
 ARG BUILDPLATFORM
 ARG APP
 
-ENV GOPATH=/usr/local/go
+#ENV GOPATH=/usr/local/go
 WORKDIR \$GOPATH/src/\${APP}
 
 #ADD ./micro ./micro
