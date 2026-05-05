@@ -321,7 +321,7 @@ function run_curl() {
 }
 
 function golang_sh() {
-    app=$(basename $(pwd))
+    app=$(yaml_read_app)
     echo "Reminded these commands are available:"
     echo "install-protoc-plugins.sh  # Step 1: install protoc plugin (run in the project root)"
     echo "go mod download            # Step 2: download all vendor files (run in the project root)"
@@ -337,14 +337,14 @@ function golang_sh() {
         "$golangImg" bash
 }
 function golang_api_linter() {
-    app=$(basename $(pwd))
+    app=$(yaml_read_app)
     nerdctl --namespace=k8s.io run --rm -t -v \
 	"$(pwd):/usr/local/go/src/$app" -w "/usr/local/go/src/$app" \
         "$golangImg" bash -c \
 	"install-protoc-plugins.sh && go mod download && buf generate && api-linter.sh"
 }
 function golang_fmt() {
-    app=$(basename $(pwd))
+    app=$(yaml_read_app)
     nerdctl --namespace=k8s.io run --rm -t -v \
 	"$(pwd):/usr/local/go/src/$app" -w "/usr/local/go/src/$app" \
         "$golangImg" gofmt -w .
