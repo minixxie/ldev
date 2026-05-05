@@ -321,12 +321,15 @@ function run_curl() {
 
 function golang_sh() {
     echo "Reminded these commands are available:"
-    echo "/scripts/install-protoc-plugins.sh  # install protoc plugin (run in the project root)"
-    echo "/scripts/build.sh                   # build the golang project (run in the project root)"
-    echo "/scripts/ci/api-linter.sh           # check if the API design has any problem (run in the project root)"
-    echo "gofmt -w .                          # format the source code (run in the project root)"
-    echo 'ls $GOPATH                          # check files in the GOPATH'
-    echo "callapi.sh < xxx.http               # use curl to make an API call (load from xxx.http)"
+    echo "install-protoc-plugins.sh  # Step 1: install protoc plugin (run in the project root)"
+    echo "go mod download            # Step 2: download all vendor files (run in the project root)"
+    echo "build.sh                   # Step 3: build the golang project (run in the project root)"
+    echo "buf generate               # Step 4: generate the code from protobuf files (run in the project root)"
+    echo "api-linter.sh              # Step 5: check if the API design has any problem (run in the project root)"
+    echo "Others:"
+    echo "gofmt -w .                 # format the source code (run in the project root)"
+    echo 'ls $GOPATH                 # check files in the GOPATH'
+    echo "callapi.sh < xxx.http      # use curl to make an API call (load from xxx.http)"
     nerdctl --namespace=k8s.io run --rm -it -v \
 	"$(pwd):/go/src/app" -w "/go/src/app" \
         "$golangImg" bash
