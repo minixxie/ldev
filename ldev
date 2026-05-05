@@ -26,75 +26,76 @@ function help() {
     cat <<EOF
 Usage: $0 arg1 arg2 arg3 ...
 Arguments:"
-├─ help........show this help message
-│  ├─ k8s......show help message for argument 'k8s'
-│  └─ gpu......show help message for argument 'gpu'
-├─ install.....download & install the 'ldev' script, upgrade if already exists
-├─ vm..........control vm (only applicable for mac os)
-│  ├─ restart..restart the lima VM
-│  └─ fixtime..fix the time lag of the VM
-├─ k8s.........get/up/down for k8s with colima/k3s
-│  ├─ get......get info of k8s
-│  ├─ up.......start k8s
-│  ├─ down.....stop k8s
-│  ├─ restart..restart k8s
-│  └─ redo.....recreate k8s
-├─ gpu.........get/up/down for nvidia gpu operator
-│  ├─ get......get info of nvidia gpu operator
-│  ├─ up.......start nvidia gpu operator
-│  └─ down.....stop nvidia gpu operator
-├─ mysql.......get/up/down for mysql
-│  ├─ get......get info of mysql
-│  ├─ up.......start mysql
-│  ├─ down.....stop mysql
-│  └─ cli......invoke mysql cli
-├─ pgsql.......get/up/down for pgsql
-│  ├─ get......get info of pgsql
-│  ├─ up.......start pgsql
-│  ├─ down.....stop pgsql
-│  └─ cli......invoke pgsql cli
-├─ redis.......get/up/down for redis-cluster
-│  ├─ get......get info of redis-cluster
-│  ├─ up.......start redis-cluster
-│  ├─ down.....stop redis-cluster
-│  └─ cli......invoke redis-cluster cli
-├─ mongo.......get/up/down for mongodb
-│  ├─ get......get info of mongodb
-│  ├─ up.......start mongodb
-│  ├─ down.....stop mongodb
-│  └─ cli......invoke mongodb cli
-├─ apollo......get/up/down for apollo
-│  ├─ get......get info of apollo
-│  ├─ up.......start apollo
-│  ├─ down.....stop apollo
-│  ├─ web......open web of apollo
-│  └─ test.....test apollo
-├─ minio.......get/up/down for MinIO
-│  ├─ get......get info of MinIO
-│  ├─ up.......start MinIO
-│  ├─ down.....stop MinIO
-│  ├─ web......open web of MinIO console
-│  └─ test.....test MinIO
-├─ ollama......get/up/down for ollama
-│  ├─ get......get info of ollama
-│  ├─ up.......start ollama
-│  ├─ down.....stop ollama
-│  └─ test.....test ollama
-├─ run.........run a pod on-demand
-│  ├─ ubuntu...run a pod with ubuntu image
-│  ├─ alpine...run a pod with alpine image
-│  └─ curl.....run a pod with curl image
-├─ golang......development commands related to golang
-│  ├─ sh.......run a container shell with mounted current working directory
-│  └─ fmt......run a container shell to gofmt the code
-├─ init........initialize ldev.yaml for the application in the current folder
-├─ get.........get info for the application in the current folder (check for kustomization/ folder)
-├─ up..........start the application in the current folder (check for kustomization/ folder)
-├─ down........stop the application in the current folder (check for kustomization/ folder)
-├─ logs........tail the logs of the application in the current folder (check for kustomization/ folder)
-├─ exec........exec shell into the pod of the application in the current folder
-├─ top.........display resource (CPU/memory) usage of the pod of the application in the current folder
-└─ http........call HTTP API with a *.http file as argument (e.g. ldev http get_user.http)
+├─ help...........show this help message
+│  ├─ k8s.........show help message for argument 'k8s'
+│  └─ gpu.........show help message for argument 'gpu'
+├─ install........download & install the 'ldev' script, upgrade if already exists
+├─ vm.............control vm (only applicable for mac os)
+│  ├─ restart.....restart the lima VM
+│  └─ fixtime.....fix the time lag of the VM
+├─ k8s............get/up/down for k8s with colima/k3s
+│  ├─ get.........get info of k8s
+│  ├─ up..........start k8s
+│  ├─ down........stop k8s
+│  ├─ restart.....restart k8s
+│  └─ redo........recreate k8s
+├─ gpu............get/up/down for nvidia gpu operator
+│  ├─ get.........get info of nvidia gpu operator
+│  ├─ up..........start nvidia gpu operator
+│  └─ down........stop nvidia gpu operator
+├─ mysql..........get/up/down for mysql
+│  ├─ get.........get info of mysql
+│  ├─ up..........start mysql
+│  ├─ down........stop mysql
+│  └─ cli.........invoke mysql cli
+├─ pgsql..........get/up/down for pgsql
+│  ├─ get.........get info of pgsql
+│  ├─ up..........start pgsql
+│  ├─ down........stop pgsql
+│  └─ cli.........invoke pgsql cli
+├─ redis..........get/up/down for redis-cluster
+│  ├─ get.........get info of redis-cluster
+│  ├─ up..........start redis-cluster
+│  ├─ down........stop redis-cluster
+│  └─ cli.........invoke redis-cluster cli
+├─ mongo..........get/up/down for mongodb
+│  ├─ get.........get info of mongodb
+│  ├─ up..........start mongodb
+│  ├─ down........stop mongodb
+│  └─ cli.........invoke mongodb cli
+├─ apollo.........get/up/down for apollo
+│  ├─ get.........get info of apollo
+│  ├─ up..........start apollo
+│  ├─ down........stop apollo
+│  ├─ web.........open web of apollo
+│  └─ test........test apollo
+├─ minio..........get/up/down for MinIO
+│  ├─ get.........get info of MinIO
+│  ├─ up..........start MinIO
+│  ├─ down........stop MinIO
+│  ├─ web.........open web of MinIO console
+│  └─ test........test MinIO
+├─ ollama.........get/up/down for ollama
+│  ├─ get.........get info of ollama
+│  ├─ up..........start ollama
+│  ├─ down........stop ollama
+│  └─ test........test ollama
+├─ run............run a pod on-demand
+│  ├─ ubuntu......run a pod with ubuntu image
+│  ├─ alpine......run a pod with alpine image
+│  └─ curl........run a pod with curl image
+├─ golang.........development commands related to golang
+│  ├─ sh..........run a container shell with mounted current working directory
+│  ├─ api-linter..run a container shell to check api issue
+│  └─ fmt.........run a container shell to gofmt the code
+├─ init...........initialize ldev.yaml for the application in the current folder
+├─ get............get info for the application in the current folder (check for kustomization/ folder)
+├─ up.............start the application in the current folder (check for kustomization/ folder)
+├─ down...........stop the application in the current folder (check for kustomization/ folder)
+├─ logs...........tail the logs of the application in the current folder (check for kustomization/ folder)
+├─ exec...........exec shell into the pod of the application in the current folder
+├─ top............display resource (CPU/memory) usage of the pod of the application in the current folder
+└─ http...........call HTTP API with a *.http file as argument (e.g. ldev http get_user.http)
 EOF
 }
 
@@ -333,6 +334,12 @@ function golang_sh() {
     nerdctl --namespace=k8s.io run --rm -it -v \
 	"$(pwd):/go/src/app" -w "/go/src/app" \
         "$golangImg" bash
+}
+function golang_api_linter() {
+    nerdctl --namespace=k8s.io run --rm -t -v \
+	"$(pwd):/go/src/app" -w "/go/src/app" \
+        "$golangImg" bash -c \
+	"install-protoc-plugins.sh && go mod download && buf generate && api-linter.sh"
 }
 function golang_fmt() {
     nerdctl --namespace=k8s.io run --rm -t -v \
@@ -1005,6 +1012,8 @@ elif [ "$1" == "run" ]; then
 elif [ "$1" == "golang" ]; then
     if [ "$2" == "sh" ]; then
         golang_sh
+    elif [ "$2" == "api-linter" ]; then
+        golang_api_linter
     elif [ "$2" == "fmt" ]; then
         golang_fmt
     else
