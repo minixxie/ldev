@@ -406,7 +406,7 @@ function pb_gen() {
         --user "$(id -u):$(id -g)" \
         -e HOME=/tmp \
         -v "$(pwd):/src" -w /src \
-        minixxie/protoc-gen-grpc:1.0.0 buf generate
+        minixxie/protoc-gen-grpc:1.0.0 bash -c "api-linter.sh && buf generate"
     echo "Generation completed. Remember to commit the files under ./gen/ folder."
 }
 
