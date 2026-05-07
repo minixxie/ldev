@@ -42,6 +42,7 @@ EOF
 	help_minio
 	help_ollama
 	help_run
+	help_pb
 	help_golang
 	cat <<EOF
 ├─ init...........initialize ldev.yaml for the application in the current folder
@@ -150,6 +151,14 @@ function help_run() {
 │  ├─ ubuntu......run a pod with ubuntu image
 │  ├─ alpine......run a pod with alpine image
 │  └─ curl........run a pod with curl image
+EOF
+}
+function help_pb() {
+	cat <<EOF
+├─ pb.............commands for handling protobuf files
+│  ├─ dep-up......"buf dep update" in a container
+│  ├─ gen........."buf generate" in a container
+│  └─ fmt.........run a container shell to gofmt the code
 EOF
 }
 function help_golang() {
@@ -382,6 +391,23 @@ function run_alpine() {
 }
 function run_curl() {
     kubectl run curl-$(date "+%s") --rm -it --restart=Never --image curlimages/curl --command -- sh
+}
+
+function pb_depup() {
+    nerdctl --namespace=k8s.io run -t --rm \
+        --user "$(id -u):$(id -g)" \
+        -e HOME=/tmp \
+        -v "$(pwd):/src" -w /src \
+        minixxie/protoc-gen-grpc:1.0.0 buf dep update
+}
+function pb_gen() {
+    rm -rf ./gen/* || true
+    nerdctl --namespace=k8s.io run -t --rm \
+        --user "$(id -u):$(id -g)" \
+        -e HOME=/tmp \
+        -v "$(pwd):/src" -w /src \
+        minixxie/protoc-gen-grpc:1.0.0 buf generate
+    echo "Generation completed. Remember to commit the files under ./gen/ folder."
 }
 
 function golang_sh() {
@@ -1089,6 +1115,16 @@ elif [ "$1" == "run" ]; then
         run_curl
     else
         help_run
+    fi
+elif [ "$1" == "pb" ]; then
+    if [ "$2" == "dep-up" ]; then
+        pb_depup
+    elif [ "$2" == "gen" ]; then
+        pb_gen
+    elif [ "$2" == "api-linter" ]; then
+        pb_api_linter
+    else
+        help_pb
     fi
 elif [ "$1" == "golang" ]; then
     if [ "$2" == "sh" ]; then
