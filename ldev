@@ -662,7 +662,7 @@ EOF
 function yaml_read_ns() {
     ns=
     if [ -f "kustomization/base/namespace.yaml" ]; then
-        ns=$(grep "name:" kustomization/base/namespace.yaml | cut -f 2 -d: | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+        ns=$(grep "[[:space:]]name:" kustomization/base/namespace.yaml | cut -f 2 -d: | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
     fi
     if [ "$ns" == "" ]; then
         ns=$(yaml_read_app)
