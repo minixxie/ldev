@@ -923,7 +923,11 @@ function pod_top() {
     kubectl -n "$ns" top pod $(kubectl -n "$ns" get pod | sed 1d | awk '{print $1}')
 }
 function call_http() {
-    bodyJson=`cat "$1"`
+    if [ -f "$1" ]; then
+        bodyJson=`cat "$1"`
+    else
+        bodyJson=`cat`
+    fi
 
     emptyLineNum=$(echo -n "$bodyJson" | grep -E --line-number '^$' | head -n 1 | cut -f 1 -d ':')
 
