@@ -694,9 +694,11 @@ function build() {
     echo >&2 "      Auto-generate for it..."
     init
     containerfile=$(gen_containerfile)
+    if [ -f "$containerfile" ]; then
     app=$(yaml_read_app)
-    nerdctl --namespace=k8s.io build . -f $containerfile -t local/$app:dont_push --build-arg APP=$app
-    nerdctl --namespace=k8s.io images | grep local/$app | grep dont_push
+        nerdctl --namespace=k8s.io build . -f $containerfile -t local/$app:dont_push --build-arg APP=$app
+        nerdctl --namespace=k8s.io images | grep local/$app | grep dont_push
+    fi
 }
 
 function gen_java_deployment() {
