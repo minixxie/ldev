@@ -50,6 +50,7 @@ EOF
 ├─ up.............start the application in the current folder (check for kustomization/ folder)
 ├─ down...........stop the application in the current folder (check for kustomization/ folder)
 ├─ logs...........tail the logs of the application in the current folder (check for kustomization/ folder)
+├─ desc...........describe the application pod in the current folder (check for kustomization/ folder)
 ├─ exec...........exec shell into the pod of the application in the current folder
 ├─ top............display resource (CPU/memory) usage of the pod of the application in the current folder
 └─ http...........call HTTP API with a *.http file as argument (e.g. ldev http get_user.http)
@@ -914,6 +915,11 @@ function logs() {
     ns=$(yaml_read_ns)
     kubectl -n "$ns" logs -f $(kubectl -n "$ns" get pod | sed 1d | awk '{print $1}')
 }
+function desc() {
+    ns=$(yaml_read_ns)
+    kubectl -n "$ns" describe pod $(kubectl -n "$ns" get pod | sed 1d | awk '{print $1}')
+}
+
 function pod_shell() {
     ns=$(yaml_read_ns)
     kubectl -n "$ns" exec -it $(kubectl -n "$ns" get pod | sed 1d | awk '{print $1}') -- sh -c 'bash || sh'
@@ -1158,6 +1164,8 @@ elif [ "$1" == "down" ]; then
     down
 elif [ "$1" == "logs" ]; then
     logs 
+elif [ "$1" == "desc" ]; then
+    desc
 elif [ "$1" == "exec" ]; then
     pod_shell
 elif [ "$1" == "top" ]; then
