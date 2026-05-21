@@ -49,6 +49,7 @@ EOF
 ├─ get............get info for the application in the current folder (check for kustomization/ folder)
 ├─ up.............start the application in the current folder (check for kustomization/ folder)
 ├─ down...........stop the application in the current folder (check for kustomization/ folder)
+├─ restart........rollout restart the application deployments in the current folder (check for kustomization/ folder)
 ├─ logs...........tail the logs of the application in the current folder (check for kustomization/ folder)
 ├─ desc...........describe the application pod in the current folder (check for kustomization/ folder)
 ├─ exec...........exec shell into the pod of the application in the current folder
@@ -911,6 +912,16 @@ function down() {
     fi
 }
 
+function restart_deployment() {
+    if [ -d "kustomization" ]; then
+        if [ -d "kustomization/overlays/local" ]; then
+            kubectl rollout restart -k ./kustomization/overlays/local
+        else
+            kubectl rollout restart -k ./kustomization/base
+        fi
+    fi
+}
+
 function logs() {
     ns=$(yaml_read_ns)
     kubectl -n "$ns" logs -f $(kubectl -n "$ns" get pod | sed 1d | awk '{print $1}')
@@ -1162,6 +1173,8 @@ elif [ "$1" == "up" ]; then
     up
 elif [ "$1" == "down" ]; then
     down
+elif [ "$1" == "restart" ]; then
+    restart_deployment
 elif [ "$1" == "logs" ]; then
     logs 
 elif [ "$1" == "desc" ]; then
