@@ -21,6 +21,7 @@ apollo="infra-apollo-server"
 minio="infra-minio"
 
 golangImg=minixxie/golang:1.26.2
+rustImg=rust:alpine
 
 function help() {
     cat <<EOF
@@ -44,6 +45,7 @@ EOF
 	help_run
 	help_pb
 	help_golang
+	help_rust
 	cat <<EOF
 ├─ init...........initialize ldev.yaml for the application in the current folder
 ├─ get............get info for the application in the current folder (check for kustomization/ folder)
@@ -171,6 +173,12 @@ function help_golang() {
 │  ├─ buf-up......run a container shell to run "buf dep update"
 │  ├─ api-linter..run a container shell to check api issue
 │  └─ fmt.........run a container shell to gofmt the code
+EOF
+}
+function help_rust() {
+	cat <<EOF
+├─ rust...........development commands related to rust
+│  └─ sh..........run a container shell with mounted current working directory
 EOF
 }
 
@@ -427,6 +435,14 @@ function golang_sh() {
     nerdctl --namespace=k8s.io run --rm -it -v \
 	"$(pwd):/go/src/$app" -w "/go/src/$app" \
         "$golangImg" bash
+}
+function rust_sh() {
+    #app=$(yaml_read_app)
+    echo "Reminded these commands are available:"
+    echo "cargo generate-lockfile"
+    nerdctl --namespace=k8s.io run --net=host --rm -it -v \
+	"$(pwd):/app" -w "/app" \
+        "$rustImg" sh
 }
 function golang_buf() {
     app=$(yaml_read_app)
@@ -1162,6 +1178,12 @@ elif [ "$1" == "golang" ]; then
         golang_fmt
     else
         help_golang
+    fi
+elif [ "$1" == "rust" ]; then
+    if [ "$2" == "sh" ]; then
+        rust_sh
+    else
+        help_rust
     fi
 elif [ "$1" == "init" ]; then
     init
