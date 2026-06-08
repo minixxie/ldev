@@ -12,7 +12,7 @@ fi
 ldevRoot="$HOME/.ldev"
 k8sProj="k8s-services"
 
-mysql="infra-mysql@8.2.0"
+mysql="infra-mysql@8.4.9"
 pgsql="infra-pgsql@15.1.0"
 redis="infra-redis-cluster"
 mongo="infra-mongodb@7.0.5"
